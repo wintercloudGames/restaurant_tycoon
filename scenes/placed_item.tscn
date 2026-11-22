@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/placed_item.gd" id="1_5roab"]
+[ext_resource type="Script" path="res://scripts/model_slot.gd" id="2_glrom"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wpxas"]
+
+[node name="PlacedItem" type="Node3D"]
+script = ExtResource("1_5roab")
+
+[node name="Model" type="Node3D" parent="."]
+script = ExtResource("2_glrom")
+
+[node name="Body" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_wpxas")

@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[node name="RankSounds" type="Node"]
+
+[node name="RankUp" type="AudioStreamPlayer" parent="."]
+
+[node name="Expand" type="AudioStreamPlayer" parent="."]

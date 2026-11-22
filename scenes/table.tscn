@@ -1,0 +1,44 @@
+[gd_scene load_steps=4 format=3 uid="uid://c710gdwkmna5u"]
+
+[ext_resource type="Script" uid="uid://hjtogiytot44" path="res://scripts/table.gd" id="1_eotx8"]
+[ext_resource type="Script" uid="uid://cu71ehkae2bdg" path="res://scripts/model_slot.gd" id="2_x8522"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_olh0b"]
+size = Vector3(1.4, 0.9537109, 1.4)
+
+[node name="Table" type="Node3D"]
+script = ExtResource("1_eotx8")
+
+[node name="TableModel" type="Node3D" parent="."]
+script = ExtResource("2_x8522")
+model_path = "res://assets/furniture-kit/tableRound.glb"
+fit_size = Vector3(1.4, 0.8, 1.4)
+fallback_color = Color(0.55, 0.35, 0.2, 1)
+
+[node name="ChairModel" type="Node3D" parent="."]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 1.2)
+script = ExtResource("2_x8522")
+model_path = "res://assets/furniture-kit/chair.glb"
+fit_size = Vector3(0.6, 1, 0.6)
+fallback_color = Color(0.7, 0.5, 0.3, 1)
+
+[node name="Body" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.47685546, 0)
+shape = SubResource("BoxShape3D_olh0b")
+
+[node name="NumberLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0.64705163, 0)
+text = "0"
+font_size = 96
+outline_size = 16
+
+[node name="SeatPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5322813, 1.2)
+
+[node name="WaiterPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1.2)
+
+[node name="FoodPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.63705164, 0.50557137)

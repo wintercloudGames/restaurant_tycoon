@@ -1,0 +1,51 @@
+[gd_scene format=3]
+
+[node name="GameSounds" type="Node"]
+
+[node name="Music" type="AudioStreamPlayer" parent="."]
+volume_db = -8.0
+autoplay = true
+
+[node name="CustomerArrive" type="AudioStreamPlayer" parent="."]
+
+[node name="OrderTaken" type="AudioStreamPlayer" parent="."]
+
+[node name="Serve" type="AudioStreamPlayer" parent="."]
+
+[node name="Eat" type="AudioStreamPlayer" parent="."]
+
+[node name="Pay" type="AudioStreamPlayer" parent="."]
+
+[node name="Angry" type="AudioStreamPlayer" parent="."]
+
+[node name="NewTicket" type="AudioStreamPlayer" parent="."]
+
+[node name="PutOnStove" type="AudioStreamPlayer" parent="."]
+
+[node name="Sizzle" type="AudioStreamPlayer" parent="."]
+
+[node name="OrderUpBell" type="AudioStreamPlayer" parent="."]
+
+[node name="PickUp" type="AudioStreamPlayer" parent="."]
+
+[node name="Footstep" type="AudioStreamPlayer" parent="."]
+
+[node name="Interact" type="AudioStreamPlayer" parent="."]
+
+[node name="Buy" type="AudioStreamPlayer" parent="."]
+
+[node name="ShopOpen" type="AudioStreamPlayer" parent="."]
+
+[node name="ShopClose" type="AudioStreamPlayer" parent="."]
+
+[node name="MinigamePress" type="AudioStreamPlayer" parent="."]
+
+[node name="MinigamePerfect" type="AudioStreamPlayer" parent="."]
+
+[node name="MinigameGood" type="AudioStreamPlayer" parent="."]
+
+[node name="MinigameMiss" type="AudioStreamPlayer" parent="."]
+
+[node name="MinigameDone" type="AudioStreamPlayer" parent="."]
+
+[node name="MinigameCancel" type="AudioStreamPlayer" parent="."]

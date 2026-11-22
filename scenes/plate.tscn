@@ -1,0 +1,28 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/plate.gd" id="1_qy4xk"]
+[ext_resource type="PackedScene" path="res://scenes/food.tscn" id="2_e0qvw"]
+[ext_resource type="Script" path="res://scripts/model_slot.gd" id="3_sqywd"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_yopf7"]
+size = Vector3(0.45, 0.5, 0.45)
+
+[node name="Plate" type="Area3D"]
+script = ExtResource("1_qy4xk")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+shape = SubResource("BoxShape3D_yopf7")
+
+[node name="Food" type="Node3D" parent="." instance=ExtResource("2_e0qvw")]
+script = ExtResource("3_sqywd")
+fit_size = Vector3(0.3, 0.2, 0.3)
+fallback_color = Color(1, 0.7, 0.2, 1)
+
+[node name="Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+pixel_size = 0.006
+billboard = 1
+no_depth_test = true
+text = "T"
+font_size = 40

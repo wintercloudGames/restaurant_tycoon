@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://0piesgkwjebn"
+path="res://.godot/imported/sizzling 1.wav-a1830f89e53d3a11d133303b451548aa.sample"
+
+[deps]
+
+source_file="res://assets/sounds/sizzling 1.wav"
+dest_files=["res://.godot/imported/sizzling 1.wav-a1830f89e53d3a11d133303b451548aa.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

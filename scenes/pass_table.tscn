@@ -1,0 +1,74 @@
+[gd_scene load_steps=8 format=3 uid="uid://bfuwv5sb3e8gf"]
+
+[ext_resource type="Script" uid="uid://dp1ipuwrx1huq" path="res://scripts/pass_table.gd" id="1_8wipw"]
+[ext_resource type="PackedScene" path="res://scenes/plate.tscn" id="2_ghwgq"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4p14x"]
+size = Vector3(4, 1, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8wipw"]
+albedo_color = Color(0.72, 0.72, 0.78, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_iga4a"]
+material = SubResource("StandardMaterial3D_8wipw")
+size = Vector3(4, 1, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ghwgq"]
+albedo_color = Color(0.43418515, 0.19833538, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4p14x"]
+material = SubResource("StandardMaterial3D_ghwgq")
+size = Vector3(4, 1, 0.8)
+
+[node name="PassTable" type="Node3D"]
+script = ExtResource("1_8wipw")
+plate_scene = ExtResource("2_ghwgq")
+
+[node name="Counter" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Counter"]
+shape = SubResource("BoxShape3D_4p14x")
+
+[node name="Mesh" type="MeshInstance3D" parent="Counter"]
+mesh = SubResource("BoxMesh_iga4a")
+
+[node name="Mesh2" type="MeshInstance3D" parent="Counter"]
+transform = Transform3D(0.6988166, 0, 0, 0, 0.5969499, 0, 0, 0, 0.037802637, 0, 1.6441889, -0.01898861)
+mesh = SubResource("BoxMesh_4p14x")
+
+[node name="Sign" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1610808, 0)
+pixel_size = 0.008
+modulate = Color(0.9999998, 0.9297021, 0.24960491, 1)
+text = "ORDER UP"
+font_size = 64
+
+[node name="Slots" type="Node3D" parent="."]
+
+[node name="Slot0" type="Marker3D" parent="Slots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.75, 1, 0)
+
+[node name="Slot1" type="Marker3D" parent="Slots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.25, 1, 0)
+
+[node name="Slot2" type="Marker3D" parent="Slots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1, 0)
+
+[node name="Slot3" type="Marker3D" parent="Slots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.25, 1, 0)
+
+[node name="Slot4" type="Marker3D" parent="Slots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.25, 1, 0)
+
+[node name="Slot5" type="Marker3D" parent="Slots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1, 0)
+
+[node name="Slot6" type="Marker3D" parent="Slots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.25, 1, 0)
+
+[node name="Slot7" type="Marker3D" parent="Slots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.75, 1, 0)
+
+[node name="PickupPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.9)

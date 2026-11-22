@@ -1,0 +1,67 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/sequence_game.gd" id="1_bdssh"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7pbrx"]
+bg_color = Color(0.9, 0.7, 0.2, 1)
+
+[node name="SequenceMinigame" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_bdssh")
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Panel/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Cooking"
+horizontal_alignment = 1
+
+[node name="StageLabel" type="Label" parent="Panel/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Stage"
+horizontal_alignment = 1
+
+[node name="Sequence" type="RichTextLabel" parent="Panel/Box"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(560, 70)
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 44
+theme_override_font_sizes/bold_font_size = 44
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="TimeBar" type="ProgressBar" parent="Panel/Box"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(560, 14)
+layout_mode = 2
+theme_override_styles/fill = SubResource("StyleBoxFlat_7pbrx")
+show_percentage = false
+
+[node name="FeedbackLabel" type="Label" parent="Panel/Box"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+horizontal_alignment = 1
+
+[node name="Hint" type="Label" parent="Panel/Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Press the keys in order (A S D F)     Esc: cancel"
+horizontal_alignment = 1

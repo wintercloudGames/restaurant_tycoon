@@ -1,0 +1,85 @@
+[gd_scene load_steps=10 format=3 uid="uid://fcpj3hapkiqw"]
+
+[ext_resource type="Script" uid="uid://3tdjy6l21tl6" path="res://scripts/kitchen.gd" id="1_mwmjw"]
+[ext_resource type="PackedScene" uid="uid://x7j45reowuqi" path="res://scenes/ticket.tscn" id="2_cwf2y"]
+[ext_resource type="PackedScene" uid="uid://bqmubpksyw0je" path="res://scenes/cook.tscn" id="3_vpxcu"]
+[ext_resource type="PackedScene" path="res://scenes/waiter.tscn" id="4_k1jr4"]
+[ext_resource type="PackedScene" path="res://scenes/cook_minigame.tscn" id="5_umms5"]
+[ext_resource type="PackedScene" path="res://scenes/stove.tscn" id="6_ktc20"]
+[ext_resource type="PackedScene" uid="uid://bfuwv5sb3e8gf" path="res://scenes/pass_table.tscn" id="7_bs8bs"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_87bic"]
+albedo_color = Color(0.25, 0.2, 0.18, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_k1cyo"]
+material = SubResource("StandardMaterial3D_87bic")
+size = Vector3(8.2, 1.1, 0.1)
+
+[node name="Kitchen" type="Node3D"]
+script = ExtResource("1_mwmjw")
+ticket_scene = ExtResource("2_cwf2y")
+cook_scene = ExtResource("3_vpxcu")
+waiter_scene = ExtResource("4_k1jr4")
+minigame_scene = ExtResource("5_umms5")
+
+[node name="Board" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4108725, -7.8)
+mesh = SubResource("BoxMesh_k1cyo")
+
+[node name="TicketSlots" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6.7652273)
+
+[node name="Slot0" type="Marker3D" parent="TicketSlots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.15, 2.4108725, -0.9197974)
+
+[node name="Slot1" type="Marker3D" parent="TicketSlots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.25, 2.4108725, -0.9197974)
+
+[node name="Slot2" type="Marker3D" parent="TicketSlots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.35, 2.4108725, -0.9197974)
+
+[node name="Slot3" type="Marker3D" parent="TicketSlots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 2.4108725, -0.9197974)
+
+[node name="Slot4" type="Marker3D" parent="TicketSlots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 2.4108725, -0.9197974)
+
+[node name="Slot5" type="Marker3D" parent="TicketSlots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.35, 2.4108725, -0.9197974)
+
+[node name="Slot6" type="Marker3D" parent="TicketSlots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.25, 2.4108725, -0.9197974)
+
+[node name="Slot7" type="Marker3D" parent="TicketSlots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.15, 2.4108725, -0.9197974)
+
+[node name="Stove" parent="." instance=ExtResource("6_ktc20")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -6.3)
+
+[node name="PassTable" parent="." instance=ExtResource("7_bs8bs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -3.6107194)
+
+[node name="CookSpots" type="Node3D" parent="."]
+
+[node name="Spot0" type="Marker3D" parent="CookSpots"]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -5.9, 0, -5)
+
+[node name="Spot1" type="Marker3D" parent="CookSpots"]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -5.3, 0, -5)
+
+[node name="Spot2" type="Marker3D" parent="CookSpots"]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -4.7, 0, -5)
+
+[node name="Spot3" type="Marker3D" parent="CookSpots"]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -4.1, 0, -5)
+
+[node name="WaiterHomes" type="Node3D" parent="."]
+
+[node name="Home0" type="Marker3D" parent="WaiterHomes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2.6107194)
+
+[node name="Home1" type="Marker3D" parent="WaiterHomes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 0, -2.6107194)
+
+[node name="Home2" type="Marker3D" parent="WaiterHomes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0, -2.6107194)

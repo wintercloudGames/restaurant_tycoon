@@ -1,0 +1,13 @@
+# Godot 4 cache / imported files (rebuilt automatically when the project opens)
+.godot/
+
+# Web export output (rebuild with tools/export_web.ps1)
+build/
+
+# Android build template, if one is ever installed
+/android/
+
+# OS clutter
+Thumbs.db
+desktop.ini
+.DS_Store

@@ -1,0 +1,51 @@
+[gd_scene load_steps=6 format=3 uid="uid://x7j45reowuqi"]
+
+[ext_resource type="Script" uid="uid://dnlsnsy4fdp6q" path="res://scripts/ticket.gd" id="1_krxyo"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7yqn5"]
+size = Vector3(0.6616211, 0.7534424, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rn5ye"]
+albedo_color = Color(0.98, 0.97, 0.85, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_o7y5v"]
+material = SubResource("StandardMaterial3D_rn5ye")
+size = Vector3(0.45, 0.62, 0.02)
+
+[sub_resource type="FontFile" id="FontFile_krxyo"]
+cache/0/25/0/ascent = 0.0
+cache/0/25/0/descent = 0.0
+cache/0/25/0/underline_position = 0.0
+cache/0/25/0/underline_thickness = 0.0
+cache/0/25/0/scale = 1.0
+cache/0/16/0/ascent = 0.0
+cache/0/16/0/descent = 0.0
+cache/0/16/0/underline_position = 0.0
+cache/0/16/0/underline_thickness = 0.0
+cache/0/16/0/scale = 1.0
+cache/0/20/0/ascent = 0.0
+cache/0/20/0/descent = 0.0
+cache/0/20/0/underline_position = 0.0
+cache/0/20/0/underline_thickness = 0.0
+cache/0/20/0/scale = 1.0
+
+[node name="Ticket" type="Area3D"]
+script = ExtResource("1_krxyo")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.004638672, 0.02672121, 0)
+shape = SubResource("BoxShape3D_7yqn5")
+
+[node name="Paper" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.3797067, 0, 0, 0, 1.2583419, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_o7y5v")
+
+[node name="Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.02)
+pixel_size = 0.006
+modulate = Color(0.1, 0.1, 0.1, 1)
+text = "TABLE"
+font = SubResource("FontFile_krxyo")
+font_size = 25
+outline_size = 1
+autowrap_mode = 2

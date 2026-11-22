@@ -1,0 +1,167 @@
+[gd_scene load_steps=23 format=3 uid="uid://cmcd26evpfntm"]
+
+[ext_resource type="Script" uid="uid://bu48yeeqiyoa3" path="res://scripts/main.gd" id="1_a8y0u"]
+[ext_resource type="PackedScene" path="res://scenes/customer.tscn" id="2_jkv2x"]
+[ext_resource type="PackedScene" uid="uid://fcpj3hapkiqw" path="res://scenes/kitchen.tscn" id="3_jbj1t"]
+[ext_resource type="PackedScene" uid="uid://c710gdwkmna5u" path="res://scenes/table.tscn" id="9_jscy8"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="11_y6deb"]
+[ext_resource type="PackedScene" uid="uid://cjae3tcyna3tr" path="res://scenes/hud.tscn" id="13_2wyq8"]
+
+[sub_resource type="Environment" id="Environment_2f3dj"]
+background_mode = 1
+background_color = Color(0.53, 0.75, 0.9, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.8, 0.8, 0.85, 1)
+ambient_light_energy = 0.35
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_yq6so"]
+size = Vector3(16, 0.2, 20)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fv21b"]
+albedo_color = Color(0.85, 0.8, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tel4y"]
+material = SubResource("StandardMaterial3D_fv21b")
+size = Vector3(16, 0.2, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_qkpxi"]
+size = Vector3(0.5, 4, 20)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5q0nq"]
+albedo_color = Color(0.95, 0.92, 0.85, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_dgi5k"]
+material = SubResource("StandardMaterial3D_5q0nq")
+size = Vector3(0.5, 4, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_j8jky"]
+size = Vector3(0.5, 4, 20)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kmb1v"]
+albedo_color = Color(0.95, 0.92, 0.85, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fuf3a"]
+material = SubResource("StandardMaterial3D_kmb1v")
+size = Vector3(0.5, 4, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pibwh"]
+size = Vector3(17, 4, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c6pm6"]
+albedo_color = Color(0.95, 0.92, 0.85, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5he1u"]
+material = SubResource("StandardMaterial3D_c6pm6")
+size = Vector3(17, 4, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5poiv"]
+size = Vector3(17, 4, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2cjbq"]
+albedo_color = Color(0.95, 0.92, 0.85, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_chjal"]
+material = SubResource("StandardMaterial3D_2cjbq")
+size = Vector3(17, 4, 0.5)
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_a8y0u")
+customer_scene = ExtResource("2_jkv2x")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_2f3dj")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8660254, 0.40957603, -0.28678823, 0, 0.57357645, 0.81915206, 0.5, -0.7094065, 0.49673176, 0, 0, 0)
+light_energy = 0.6
+shadow_enabled = true
+
+[node name="Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Mesh" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("BoxMesh_tel4y")
+
+[node name="WallLeft" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.25, 2, 2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallLeft"]
+shape = SubResource("BoxShape3D_qkpxi")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallLeft"]
+mesh = SubResource("BoxMesh_dgi5k")
+
+[node name="WallRight" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 2, 2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallRight"]
+shape = SubResource("BoxShape3D_j8jky")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallRight"]
+mesh = SubResource("BoxMesh_fuf3a")
+
+[node name="WallBack" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -8.25)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallBack"]
+shape = SubResource("BoxShape3D_pibwh")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallBack"]
+mesh = SubResource("BoxMesh_5he1u")
+
+[node name="WallFront" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 12.25)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallFront"]
+shape = SubResource("BoxShape3D_5poiv")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallFront"]
+mesh = SubResource("BoxMesh_chjal")
+
+[node name="Kitchen" parent="." instance=ExtResource("3_jbj1t")]
+
+[node name="Tables" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.9572725)
+
+[node name="Table1" parent="Tables" instance=ExtResource("9_jscy8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0, -1.5)
+number = 1
+
+[node name="Table2" parent="Tables" instance=ExtResource("9_jscy8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, -1.5)
+number = 2
+
+[node name="Table3" parent="Tables" instance=ExtResource("9_jscy8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, -1.5)
+number = 3
+
+[node name="Table4" parent="Tables" instance=ExtResource("9_jscy8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, -1.5)
+number = 4
+
+[node name="Table5" parent="Tables" instance=ExtResource("9_jscy8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0, 3)
+number = 5
+
+[node name="Table6" parent="Tables" instance=ExtResource("9_jscy8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 3)
+number = 6
+
+[node name="Table7" parent="Tables" instance=ExtResource("9_jscy8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 3)
+number = 7
+
+[node name="Table8" parent="Tables" instance=ExtResource("9_jscy8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 3)
+number = 8
+
+[node name="Door" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9)
+
+[node name="Player" parent="." instance=ExtResource("11_y6deb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 6)
+
+[node name="HUD" parent="." instance=ExtResource("13_2wyq8")]

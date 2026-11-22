@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/waiter.gd" id="1_6bqyt"]
+[ext_resource type="Script" path="res://scripts/model_slot.gd" id="2_4qy88"]
+
+[node name="Waiter" type="Node3D"]
+script = ExtResource("1_6bqyt")
+
+[node name="Model" type="Node3D" parent="."]
+script = ExtResource("2_4qy88")
+random_paths = Array[String](["res://assets/mini-characters/character-male-a.glb", "res://assets/mini-characters/character-female-a.glb", "res://assets/mini-characters/character-male-b.glb", "res://assets/mini-characters/character-female-b.glb"])
+fit_size = Vector3(0.8, 1.3, 0.8)
+fallback_color = Color(0.2, 0.3, 0.7, 1)
+
+[node name="HeldPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0.5)

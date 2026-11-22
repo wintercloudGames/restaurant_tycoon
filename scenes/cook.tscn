@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://bqmubpksyw0je"]
+
+[ext_resource type="Script" uid="uid://bsfs624r3msgk" path="res://scripts/cook.gd" id="1_shegc"]
+[ext_resource type="Script" uid="uid://cu71ehkae2bdg" path="res://scripts/model_slot.gd" id="2_agw14"]
+
+[node name="Cook" type="Node3D"]
+script = ExtResource("1_shegc")
+
+[node name="Model" type="Node3D" parent="."]
+script = ExtResource("2_agw14")
+random_paths = Array[String](["res://assets/mini-characters/character-male-a.glb", "res://assets/mini-characters/character-female-a.glb", "res://assets/mini-characters/character-male-b.glb", "res://assets/mini-characters/character-female-b.glb"])
+fit_size = Vector3(0.8, 1.3, 0.8)
+fallback_color = Color(0.95, 0.95, 0.95, 1)

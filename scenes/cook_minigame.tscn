@@ -1,0 +1,73 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/timing_game.gd" id="1_5k0x5"]
+
+[node name="CookMinigame" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_5k0x5")
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Panel/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Cooking"
+horizontal_alignment = 1
+
+[node name="StageLabel" type="Label" parent="Panel/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Stage"
+horizontal_alignment = 1
+
+[node name="Bar" type="Control" parent="Panel/Box"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(560, 44)
+layout_mode = 2
+
+[node name="BG" type="ColorRect" parent="Panel/Box/Bar"]
+layout_mode = 0
+offset_top = 4.0
+offset_right = 560.0
+offset_bottom = 40.0
+color = Color(0.15, 0.15, 0.18, 1)
+
+[node name="Zone" type="ColorRect" parent="Panel/Box/Bar"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_top = 4.0
+offset_right = 140.0
+offset_bottom = 40.0
+color = Color(0.3, 0.8, 0.35, 1)
+
+[node name="Marker" type="ColorRect" parent="Panel/Box/Bar"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 5.0
+offset_bottom = 44.0
+
+[node name="FeedbackLabel" type="Label" parent="Panel/Box"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+horizontal_alignment = 1
+
+[node name="Hint" type="Label" parent="Panel/Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Space / E / Click: stop the marker in the green zone     Esc: cancel"
+horizontal_alignment = 1

@@ -1,0 +1,45 @@
+<!-- CrazyGames SDK v3 + small helpers used by autoload/crazy_games.gd.
+     This file is pasted into the web export's "Head Include" (export_presets.cfg).
+     If you edit it, paste it into Project > Export > Web > HTML > Head Include again. -->
+<script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
+<script>
+(function () {
+  var sdk = function () { return window.CrazyGames && window.CrazyGames.SDK; };
+  var ready = false;
+  window.cgInit = function (done) {
+    var s = sdk();
+    if (!s) { done(false); return; }
+    s.init().then(function () {
+      ready = s.environment !== "disabled";
+      if (ready) { try { s.game.loadingStart(); } catch (e) {} }
+      done(ready);
+    }).catch(function (e) { console.warn("CrazyGames SDK init failed", e); done(false); });
+  };
+  window.cgCall = function (method) {
+    if (!ready) return;
+    try { sdk().game[method](); } catch (e) { console.warn("CrazyGames " + method, e); }
+  };
+  window.cgAd = function (kind, onStart, onDone, onError) {
+    if (!ready) { onError("sdk not ready"); return; }
+    try {
+      sdk().ad.requestAd(kind, {
+        adStarted: function () { onStart(); },
+        adFinished: function () { onDone(); },
+        adError: function (e) { onError(String((e && e.code) || e)); }
+      });
+    } catch (e) { onError(String(e)); }
+  };
+  window.cgGetItem = function (key) {
+    if (!ready) return null;
+    try { return sdk().data.getItem(key); } catch (e) { return null; }
+  };
+  window.cgSetItem = function (key, value) {
+    if (!ready) return;
+    try { sdk().data.setItem(key, value); } catch (e) { console.warn("CrazyGames setItem", e); }
+  };
+  // Keep keys like Space and the arrows from scrolling the CrazyGames page around the game.
+  window.addEventListener("keydown", function (e) {
+    if ([" ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].indexOf(e.key) >= 0) e.preventDefault();
+  }, { passive: false });
+})();
+</script>

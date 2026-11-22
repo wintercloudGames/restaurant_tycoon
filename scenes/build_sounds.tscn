@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[node name="BuildSounds" type="Node"]
+
+[node name="BuildToggle" type="AudioStreamPlayer" parent="."]
+
+[node name="BuildSelect" type="AudioStreamPlayer" parent="."]
+
+[node name="BuildRotate" type="AudioStreamPlayer" parent="."]
+
+[node name="BuildPlace" type="AudioStreamPlayer" parent="."]
+
+[node name="BuildSell" type="AudioStreamPlayer" parent="."]
+
+[node name="BuildError" type="AudioStreamPlayer" parent="."]
