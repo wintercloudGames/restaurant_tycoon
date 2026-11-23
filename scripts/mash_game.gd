@@ -1,7 +1,8 @@
 class_name MashGame
 extends CookMinigame
-## Stirring minigame (minigame_mash.tscn): mash Space / E / Left Click to fill the meter
-## before time runs out. The meter drains while you're not stirring. Finish sooner = better.
+## Stir / mix minigame (minigame_mash.tscn): mash Space / E / click / controller A to fill the
+## meter before time runs out. The meter drains while you're not stirring. Finish with at least
+## half the time left for a Perfect (the gold line on the time bar).
 
 @export var time_limit: float = 8.0
 
@@ -18,8 +19,28 @@ func _setup() -> void:
 	var d := difficulty()
 	_gain = 0.085 - 0.03 * d
 	_decay = 0.18 + 0.12 * d
-	_stage_label.text = "Stir! Mash Space / E / Click!"
+	_meter_bar.show_percentage = true
+	_add_perfect_line()
+	set_prompt(["cook_press"], "Mash it to fill the meter!")
 	_update_bars()
+
+
+## A gold line at the halfway point of the time bar: fill the meter before it for a Perfect.
+func _add_perfect_line() -> void:
+	var line := ColorRect.new()
+	line.color = Color.WHITE # the "finish before here for a Perfect" mark
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_time_bar.add_child(line)
+	line.anchor_left = 0.5
+	line.anchor_right = 0.5
+	line.anchor_bottom = 1.0
+	line.offset_left = -3
+	line.offset_right = 3
+
+
+func _poll() -> void:
+	if Input.is_action_just_pressed("cook_press"):
+		_stir()
 
 
 func _tick(delta: float) -> void:
@@ -34,24 +55,18 @@ func _tick(delta: float) -> void:
 func _update_bars() -> void:
 	_meter_bar.value = _meter * 100.0
 	_time_bar.value = (1.0 - _elapsed / time_limit) * 100.0
-
-
-func _game_input(event: InputEvent) -> void:
-	var pressed := false
-	if event is InputEventKey and event.pressed and not event.echo:
-		pressed = event.keycode == KEY_SPACE or event.keycode == KEY_E
-	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		pressed = true
-	if pressed:
-		get_viewport().set_input_as_handled()
-		_stir()
+	var left := time_limit - _elapsed
+	_stage_label.text = "Faster!  %.1fs left" % left if left < 2.5 else "Keep going!  %.1fs left" % left
 
 
 func _stir() -> void:
 	if _result_timer >= 0.0:
 		return
 	_meter += _gain
-	Sfx.play(&"MinigamePress")
+	Sfx.play(&"Stir")
+	pulse(_meter_bar, 1.04)
+	if _prompt_icons.get_child_count() > 0:
+		pulse(_prompt_icons.get_child(0) as Control)
 	if _meter >= 1.0:
 		_meter = 1.0
 		_update_bars()

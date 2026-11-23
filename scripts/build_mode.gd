@@ -44,6 +44,7 @@ var _ok_mat: StandardMaterial3D
 var _bad_mat: StandardMaterial3D
 var _rot: float = 0.0
 var _origin_table: Table # where a chair you picked up came from (it goes back there if you cancel)
+var _origin_comfy: bool = false # whether that chair was a comfy one
 var _origin_slot: int = -1
 var _slot_markers: Array[MeshInstance3D] = []
 var _marker_mat: StandardMaterial3D
@@ -107,7 +108,10 @@ func activate() -> void:
 	grid.visible = true
 	selected = -1
 	_refresh_ui()
-	ui.set_status("Pick an item: 1-9 or mouse wheel.  Click something to move it, right-click to sell.")
+	if Controls.using_controller:
+		ui.set_status("Pick an item: LB / RB.  A: move something, X: sell, Y: rotate, B: done.")
+	else:
+		ui.set_status("Pick an item: 1-9 or mouse wheel.  Click something to move it, right-click to sell.")
 	Sfx.play(&"BuildToggle")
 
 
@@ -127,18 +131,35 @@ func deactivate() -> void:
 # ---- Input ---------------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_V:
-			toggle()
-			get_viewport().set_input_as_handled()
-			return
-		if not active:
-			return
-		if event.keycode == KEY_ESCAPE:
-			deactivate()
-		elif event.keycode == KEY_R:
-			_rotate()
-		elif event.keycode >= KEY_1 and event.keycode <= KEY_9:
+	if event.is_echo():
+		return
+	if event.is_action_pressed("build"): # V or the controller's View / Back button
+		toggle()
+		get_viewport().set_input_as_handled()
+		return
+	if not active:
+		return
+	# Controller: A place / pick up, X sell / cancel, Y rotate, LB / RB item, B leave.
+	var handled := true
+	if event.is_action_pressed("cancel"):
+		deactivate()
+	elif event.is_action_pressed("build_rotate"):
+		_rotate()
+	elif event.is_action_pressed("build_place"):
+		_left_click()
+	elif event.is_action_pressed("build_sell"):
+		_right_click()
+	elif event.is_action_pressed("build_prev"):
+		_select(selected - 1)
+	elif event.is_action_pressed("build_next"):
+		_select(selected + 1)
+	else:
+		handled = false
+	if handled:
+		get_viewport().set_input_as_handled()
+		return
+	if event is InputEventKey and event.pressed:
+		if event.keycode >= KEY_1 and event.keycode <= KEY_9:
 			var index: int = event.keycode - KEY_1
 			if index < BuildCatalog.ITEMS.size():
 				_select(index)
@@ -221,7 +242,7 @@ func _select(index: int) -> void:
 		table.build_holding = true
 		table.set_active(true)
 	elif def["kind"] == "chair":
-		held = _new_ghost_chair()
+		held = _new_ghost_chair(bool(def.get("comfy", false)))
 		held_kind = "chair"
 		held_origin = held.global_transform
 	else:
@@ -245,10 +266,11 @@ func _pick_up(node: Node3D) -> void:
 			return
 		_origin_table = chair_table
 		_origin_slot = chair.slot
+		_origin_comfy = chair.comfy
 		chair_table.remove_chair(chair.slot) # you carry it; cancel puts it back
-		held = _new_ghost_chair()
+		held = _new_ghost_chair(chair.comfy)
 		held_kind = "chair"
-		held_def = BuildCatalog.find("chair")
+		held_def = BuildCatalog.chair_def(chair.comfy)
 		held_new = false
 		_set_ghost(held, true)
 		Sfx.play(&"BuildSelect")
@@ -286,7 +308,7 @@ func _cancel_hold() -> void:
 		held.get_parent().remove_child(held)
 		held.queue_free()
 		if not held_new and _origin_table != null and is_instance_valid(_origin_table):
-			_origin_table.add_chair(_origin_slot) # back where it came from
+			_origin_table.add_chair(_origin_slot, _origin_comfy) # back where it came from
 		held = null
 		_hide_slot_markers()
 		return
@@ -389,7 +411,7 @@ func _sync_state() -> void:
 	GameState.placed = list
 	var layout := {}
 	for t in tables:
-		layout[str(t.number)] = {"x": t.position.x, "z": t.position.z, "rot": t.rotation.y, "seats": t.seats, "chairs": t.filled_slots()}
+		layout[str(t.number)] = {"x": t.position.x, "z": t.position.z, "rot": t.rotation.y, "seats": t.seats, "chairs": t.filled_slots(), "comfy": t.comfy_slots()}
 	GameState.table_layout = layout
 	GameState.changed.emit()
 	_refresh_ui()
@@ -404,11 +426,15 @@ func restore_layout() -> void:
 			t.position = Vector3(float(d["x"]), t.position.y, float(d["z"]))
 			t.rotation.y = float(d["rot"])
 			if d.has("chairs"):
-				t.set_chairs(d["chairs"])
+				t.set_chairs(d["chairs"], d.get("comfy", []))
 				continue
-		# Starter tables and tables from older saves come with all their chairs.
+		# A new restaurant's starter table has just one chair; tables from older saves come
+		# with all their chairs.
 		if GameState.is_table_owned(t.number):
-			t.fill_chairs()
+			if GameState.is_new_game:
+				t.set_chairs([0])
+			else:
+				t.fill_chairs()
 		else:
 			t.clear_chairs()
 	for child in items_parent.get_children():
@@ -421,7 +447,10 @@ func restore_layout() -> void:
 		var item := _new_item(def)
 		item.position = Vector3(float(d["x"]), 0.0, float(d["z"]))
 		item.rotation.y = float(d["rot"])
-	_refresh_ui()
+	if GameState.is_new_game:
+		_sync_state() # store the one-chair starter table, so idle income counts 1 chair
+	else:
+		_refresh_ui()
 
 
 func _refresh_ui() -> void:
@@ -481,11 +510,12 @@ func _update_hover() -> void:
 		ui.set_status("%s  -  click: move   |   right-click: sell for $%d" % [
 			(node as PlacedItem).def["name"], int(int((node as PlacedItem).def["cost"]) * sell_refund)])
 	elif node is Chair:
-		ui.set_status("Chair  -  click: move   |   right-click: sell for $%d" % int(GameState.CHAIR_COST * sell_refund))
+		var chair_def := BuildCatalog.chair_def((node as Chair).comfy)
+		ui.set_status("%s  -  click: move   |   right-click: sell for $%d" % [chair_def["name"], _chair_refund(node as Chair)])
 	elif node is Table:
 		var table := node as Table
 		var value := int(GameState.table_base_price(table.seats) * sell_refund)
-		var chair_value := table.chair_count() * int(GameState.CHAIR_COST * sell_refund)
+		var chair_value := _chairs_refund(table)
 		ui.set_status("Table for %d (%d/%d chairs)  -  click: move   |   right-click: sell for $%d%s" % [
 			table.seats, table.chair_count(), table.seats, value,
 			(" + $%d for its chairs" % chair_value) if chair_value > 0 else ""])
@@ -601,8 +631,8 @@ func _next_free_table() -> Table:
 	return null
 
 
-func _new_ghost_chair() -> Chair:
-	var chair := tables[0].make_chair()
+func _new_ghost_chair(comfy: bool = false) -> Chair:
+	var chair := tables[0].make_chair(comfy)
 	items_parent.add_child(chair)
 	chair.set_pickable(false)
 	return chair
@@ -657,8 +687,8 @@ func _update_held_chair() -> void:
 		var table: Table = snap["table"]
 		var verb := "Place" if held_new else "Put down"
 		var price := ("  ($%d)" % BuildCatalog.cost_of(held_def)) if held_new else ""
-		ui.set_status("%s chair%s  -  table for %d: %d/%d chairs   |   Right-click cancel" % [
-			verb, price, table.seats, table.chair_count() + 1, table.seats])
+		ui.set_status("%s %s%s  -  table for %d: %d/%d chairs   |   Right-click cancel" % [
+			verb, str(held_def["name"]).to_lower(), price, table.seats, table.chair_count() + 1, table.seats])
 	else:
 		ui.set_status(reason, false)
 
@@ -680,7 +710,7 @@ func _place_chair() -> void:
 	held = null
 	ghost.get_parent().remove_child(ghost)
 	ghost.queue_free()
-	table.add_chair(int(snap["slot"]))
+	table.add_chair(int(snap["slot"]), bool(held_def.get("comfy", false)))
 	_origin_table = null
 	_hide_slot_markers()
 	Sfx.play(&"BuildPlace")
@@ -725,12 +755,24 @@ func _sell_chair(chair: Chair) -> void:
 		ui.set_status("Customers are sitting at that table.", false)
 		Sfx.play(&"BuildError")
 		return
-	var value := int(GameState.CHAIR_COST * sell_refund)
+	var value := _chair_refund(chair)
 	GameState.add_money(value)
 	owner_table.remove_chair(chair.slot)
 	ui.set_status("Sold the chair for $%d." % value)
 	Sfx.play(&"BuildSell")
 	_sync_state()
+
+
+## What selling a chair gives back (comfy chairs cost more, so they refund more).
+func _chair_refund(chair: Chair) -> int:
+	return int(BuildCatalog.cost_of(BuildCatalog.chair_def(chair.comfy)) * sell_refund)
+
+
+func _chairs_refund(table: Table) -> int:
+	var total := 0
+	for slot in table.filled_slots():
+		total += _chair_refund(table.chair_at(slot))
+	return total
 
 
 ## Selling a table also sells the chairs that are at it (each for its own refund).
@@ -740,7 +782,7 @@ func _sell_table(table: Table) -> void:
 		Sfx.play(&"BuildError")
 		return
 	var chairs := table.chair_count()
-	var total := int(GameState.table_base_price(table.seats) * sell_refund) + chairs * int(GameState.CHAIR_COST * sell_refund)
+	var total := int(GameState.table_base_price(table.seats) * sell_refund) + _chairs_refund(table)
 	GameState.add_money(total)
 	table.clear_chairs()
 	GameState.sell_table(table.number)

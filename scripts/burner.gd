@@ -142,7 +142,10 @@ func _process(_delta: float) -> void:
 		disc_mat.albedo_color = idle_color
 		return
 	label.visible = true
-	label.text = "%s\n%s" % [order.where(), status] if order.step_count() <= 1 else "%s\n%s\n%s" % [order.where(), order.step_text(), status]
+	var shown := status
+	if state == State.WAITING:
+		shown = "Press A" if Controls.using_controller else "Press E"
+	label.text = "%s\n%s" % [order.where(), shown] if order.step_count() <= 1 else "%s\n%s\n%s" % [order.where(), order.step_text(), shown]
 	if state == State.WAITING:
 		label.modulate = Color(0.5, 1.0, 0.6)
 		disc_mat.albedo_color = waiting_color

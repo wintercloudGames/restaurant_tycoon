@@ -1,7 +1,7 @@
 class_name SequenceGame
 extends CookMinigame
 ## Assembly minigame (minigame_sequence.tscn): press the arrows shown, in order, before time runs
-## out. Use the arrow keys or W A S D (up / left / down / right). Wrong directions cost quality.
+## out: arrow keys, W A S D, the D-pad or the left stick. Wrong directions cost quality.
 
 const DIRECTIONS: Array[String] = ["up", "down", "left", "right"]
 const ARROW_SIZE := 64
@@ -24,10 +24,7 @@ func _setup() -> void:
 	var length := 5 + int(round(3.0 * difficulty()))
 	for i in length:
 		_seq.append(DIRECTIONS.pick_random())
-	_stage_label.text = "Press the arrows (or W A S D) in order!"
-	var hint := get_node_or_null("Panel/Box/Hint") as Label
-	if hint != null:
-		hint.text = "Arrow keys or W A S D: up / left / down / right     Esc: cancel"
+	set_prompt(["dir_up", "dir_left", "dir_down", "dir_right"], "Press the arrows in order")
 	_build_arrows()
 	_refresh()
 
@@ -62,6 +59,7 @@ func _build_arrows() -> void:
 
 ## Done arrows go green, the one to press now is big and yellow, the rest are white.
 func _refresh() -> void:
+	_stage_label.text = "%d of %d  -  mistakes: %d" % [_index, _seq.size(), _mistakes]
 	for i in _cells.size():
 		var cell := _cells[i]
 		if i < _index:
@@ -75,33 +73,21 @@ func _refresh() -> void:
 			cell.custom_minimum_size = Vector2(ARROW_SIZE, ARROW_SIZE) * 0.9
 
 
-## "up", "down", "left" or "right" for an arrow key or W / S / A / D; "" for anything else.
-static func direction_for_key(event: InputEventKey) -> String:
-	for code in [event.keycode, event.physical_keycode]:
-		match code:
-			KEY_UP, KEY_W:
-				return "up"
-			KEY_DOWN, KEY_S:
-				return "down"
-			KEY_LEFT, KEY_A:
-				return "left"
-			KEY_RIGHT, KEY_D:
-				return "right"
-	return ""
+const DIR_ACTIONS := {"up": "dir_up", "down": "dir_down", "left": "dir_left", "right": "dir_right"}
 
 
-func _game_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
-		var dir := direction_for_key(event)
-		if dir != "":
-			get_viewport().set_input_as_handled()
+func _poll() -> void:
+	for dir in DIR_ACTIONS:
+		if Input.is_action_just_pressed(DIR_ACTIONS[dir]):
 			_press_key(dir)
+			return
 
 
 func _press_key(dir: String) -> void:
 	if _result_timer >= 0.0 or _index >= _seq.size():
 		return
 	if dir == _seq[_index]:
+		pulse(_cells[_index], 1.3)
 		_index += 1
 		_feedback_label.text = ""
 		Sfx.play(&"MinigamePress")
@@ -112,9 +98,17 @@ func _press_key(dir: String) -> void:
 			_finish(clampf(n / (n + _mistakes * 1.5), 0.0, 1.0))
 	else:
 		_mistakes += 1
-		_feedback_label.text = "Wrong direction!"
-		_feedback_label.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
+		show_feedback("Wrong way!", MISS_COLOR)
+		_refresh()
+		_shake(_cells[_index])
 		Sfx.play(&"MinigameMiss")
+
+
+## A little side-to-side shake on the arrow you got wrong.
+func _shake(node: Control) -> void:
+	var tween := create_tween()
+	for offset in [8.0, -8.0, 5.0, 0.0]:
+		tween.tween_property(node, "position:x", node.position.x + offset, 0.04)
 
 
 ## A white arrow pointing `dir`, drawn from a few shapes (no font or image file needed).

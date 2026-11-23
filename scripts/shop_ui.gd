@@ -12,7 +12,7 @@ signal close_requested
 const TABS: Array[String] = ["Dishes", "Upgrades", "Staff", "Build", "Restaurant"]
 const CARD_SIZE := Vector2(200, 255)
 const PREVIEW_SIZE := Vector2i(180, 130)
-const GAME_NAMES := {"timing": "Grill", "hold": "Fry / pour", "mash": "Stir / scoop", "sequence": "Assemble"}
+const GAME_NAMES := {"timing": "Grill", "hold": "Fry / pour", "mash": "Stir / mix", "chop": "Chop", "sequence": "Assemble"}
 
 var _tab: int = 0
 var _cards: Dictionary = {} # tab index -> Array[PanelContainer]
@@ -31,6 +31,10 @@ func _ready() -> void:
 	_tabs.tab_changed.connect(_show_tab)
 	_close_button.pressed.connect(func() -> void: close_requested.emit())
 	_scroll.resized.connect(_update_columns)
+	_scroll.follow_focus = true # the list scrolls to the card a controller selects
+	Controls.device_changed.connect(func(_c: bool) -> void:
+		if visible:
+			_focus_first_card())
 
 
 ## A solid dark window so the 3D scene and HUD don't show through.
@@ -107,6 +111,9 @@ func _upgrade_entries() -> Array[Dictionary]:
 		_level_entry("Marketing", "Customers arrive 10% faster.",
 			"res://assets/furniture-kit/televisionModern.glb", GameState.marketing_level, GameState.MAX_MARKETING,
 			GameState.marketing_cost(), GameState.marketing_rank(), GameState.buy_marketing),
+		_level_entry("Serving Tray", "Carry one more plate at a time (now %d)." % GameState.carry_capacity(),
+			"res://assets/food-kit/plate-rectangle.glb", GameState.tray_level, GameState.MAX_TRAY,
+			GameState.tray_cost(), GameState.tray_rank(), GameState.buy_tray),
 		_level_entry("Comfy seating", "Customers wait 15% longer.",
 			"res://assets/furniture-kit/loungeChair.glb", GameState.comfort_level, GameState.MAX_COMFORT,
 			GameState.comfort_cost(), GameState.comfort_rank(), GameState.buy_comfort),
@@ -169,6 +176,8 @@ func _build_entries() -> Array[Dictionary]:
 				info = "Holds up to %d chairs (bought separately).\n%d of %d tables allowed" % [d["seats"], GameState.table_count, GameState.max_tables()]
 			"chair":
 				info = "Snaps to a free spot around a table. A table holds as many chairs as it seats."
+				if d.get("comfy", false):
+					info = "So comfy that customers sitting on it wait %d%% longer before leaving." % int(round((GameState.COMFY_CHAIR_PATIENCE - 1.0) * 100.0))
 			"station":
 				info = "A cooking station."
 				if d["id"] == "stove":
@@ -229,6 +238,8 @@ func _restaurant_entries() -> Array[Dictionary]:
 # ---- Cards ---------------------------------------------------------------
 
 func _show_tab(tab: int) -> void:
+	if tab != _tab and visible:
+		Sfx.play(&"UIClick")
 	_tab = tab
 	if _tabs.current_tab != tab:
 		_tabs.current_tab = tab
@@ -247,6 +258,30 @@ func _show_tab(tab: int) -> void:
 	_scroll.scroll_vertical = 0
 	refresh()
 	_update_columns()
+	_focus_first_card.call_deferred()
+
+
+## With a controller, put the selection on the first card so the D-pad / stick can move it.
+func _focus_first_card() -> void:
+	if not visible or not Controls.using_controller:
+		return
+	var cards: Array = _cards.get(_tab, [])
+	if not cards.is_empty():
+		var button := (cards[0] as Node).find_child("BuyButton", true, false) as Button
+		if button != null:
+			button.grab_focus()
+
+
+## LB / RB (or Q / Tab) switch tabs.
+func _input(event: InputEvent) -> void:
+	if not visible or event.is_echo():
+		return
+	if event.is_action_pressed("tab_prev"):
+		_show_tab(posmod(_tab - 1, TABS.size()))
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("tab_next"):
+		_show_tab(posmod(_tab + 1, TABS.size()))
+		get_viewport().set_input_as_handled()
 
 
 ## Updates every card's text and button (call when money or purchases change).

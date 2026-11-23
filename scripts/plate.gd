@@ -12,6 +12,8 @@ var slot: int = 0
 
 func _ready() -> void:
 	food.model_path = Food.model_path_for(order.dish_id)
+	add_child(Food.make_plate()) # finished food sits on a plate
+	food.position.y += 0.025
 	label.text = order.where()
 	if order.quality >= 0.85:
 		label.modulate = Color(1.0, 0.85, 0.2) # perfect
@@ -22,14 +24,14 @@ func _ready() -> void:
 func get_prompt(player: Player) -> String:
 	if order.claimed:
 		return "A waiter is getting this"
-	if player.held_order != null:
-		return "Your hands are full"
+	if not player.can_carry_more():
+		return "Your hands are full" if player.carry_capacity() == 1 else "Your tray is full (%d plates)" % player.carry_capacity()
 	return "[E] Take %s (%s, %s)" % [
 		order.dish_name(), order.where(), CookMinigame.quality_name(order.quality)]
 
 
 func interact(player: Player) -> void:
-	if order.claimed or player.held_order != null:
+	if order.claimed or not player.can_carry_more():
 		return
 	pass_table.remove_plate(self)
-	player.set_held(order)
+	player.add_held(order)

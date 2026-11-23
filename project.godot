@@ -17,6 +17,7 @@ config/icon="uid://biuqxvh1w5ibx"
 
 [autoload]
 
+Controls="*res://autoload/controls.gd"
 GameState="*res://autoload/game_state.gd"
 CrazyGames="*res://autoload/crazy_games.gd"
 

@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://ou5gp6nd2l2x"
+path="res://.godot/imported/ground_riverStraight.obj-3e6defe922d879b58bc50c515792e727.mesh"
+
+[deps]
+
+files=["res://.godot/imported/ground_riverStraight.obj-3e6defe922d879b58bc50c515792e727.mesh"]
+
+source_file="res://assets/nature-kit/ground_riverStraight.obj"
+dest_files=["res://.godot/imported/ground_riverStraight.obj-3e6defe922d879b58bc50c515792e727.mesh", "res://.godot/imported/ground_riverStraight.obj-3e6defe922d879b58bc50c515792e727.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

@@ -31,6 +31,18 @@ static func _find(sound_name: StringName) -> AudioStreamPlayer:
 	return null
 
 
+## Fills every sound node that has no stream with the game's default sound (see sound_bank.gd).
+static func fill_defaults() -> void:
+	SoundBank.fill(_roots)
+	_cache.clear()
+
+
+static func set_volume(sound_name: StringName, db: float) -> void:
+	var p := _find(sound_name)
+	if p != null:
+		p.volume_db = db
+
+
 static func play(sound_name: StringName) -> void:
 	var p := _find(sound_name)
 	if p != null and p.stream != null:

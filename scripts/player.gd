@@ -19,8 +19,8 @@ var enabled: bool = true
 var pitch: float = 0.0
 var prompt: String = ""
 var target: Node = null
-var held_order: Order = null
-var held_visual: Node3D = null
+var held_orders: Array[Order] = [] # plates you're carrying (more than one with the Serving Tray upgrade)
+var _held_root: Node3D # the plates (and the tray, if carrying more than one) in your hands
 var busy: bool = false # true while playing the cooking minigame
 var build_mode: bool = false # true while in build mode (clicks build instead of interacting)
 var _step_timer: float = 0.0
@@ -43,24 +43,24 @@ func _unhandled_input(event: InputEvent) -> void:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		elif not build_mode:
 			_interact()
-	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E:
+	elif event.is_action_pressed("interact") and not event.is_echo():
 		if not build_mode:
-			_interact()
+			_interact() # E or the controller's A button
 
 
 func _physics_process(delta: float) -> void:
 	if enabled:
-		var input := Vector2(
-			float(Input.is_physical_key_pressed(KEY_D)) - float(Input.is_physical_key_pressed(KEY_A)),
-			float(Input.is_physical_key_pressed(KEY_S)) - float(Input.is_physical_key_pressed(KEY_W)))
-		var dir := (transform.basis * Vector3(input.x, 0, input.y)).normalized()
+		# WASD or the left stick (a half-pushed stick walks slower).
+		var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+		var dir := transform.basis * Vector3(input.x, 0, input.y)
 		velocity.x = dir.x * speed
 		velocity.z = dir.z * speed
-		if not build_mode:
-			var turn := float(Input.is_physical_key_pressed(KEY_RIGHT)) - float(Input.is_physical_key_pressed(KEY_LEFT))
-			var tilt := float(Input.is_physical_key_pressed(KEY_UP)) - float(Input.is_physical_key_pressed(KEY_DOWN))
-			rotate_y(-turn * key_turn_speed * delta)
-			pitch = clampf(pitch + tilt * key_turn_speed * 0.6 * delta, -1.4, 1.4)
+		# Arrow keys or the right stick turn the camera; the mouse sensitivity setting scales it too.
+		var look := Input.get_vector("look_left", "look_right", "look_down", "look_up")
+		if look != Vector2.ZERO:
+			var turn_speed := key_turn_speed * (sensitivity / 0.0025)
+			rotate_y(-look.x * turn_speed * delta)
+			pitch = clampf(pitch + look.y * turn_speed * 0.6 * delta, -1.4, 1.4)
 			camera.rotation.x = pitch
 	else:
 		velocity.x = 0.0
@@ -122,22 +122,83 @@ func _footsteps(delta: float) -> void:
 
 # ---- Carrying a plate ----------------------------------------------------
 
-func set_held(order: Order) -> void:
-	clear_held()
+## How many plates you can carry at once (1, or more with the Serving Tray upgrade).
+func carry_capacity() -> int:
+	return GameState.carry_capacity()
+
+
+func can_carry_more() -> bool:
+	return held_orders.size() < carry_capacity()
+
+
+## The plate you're carrying for `customer`, if any.
+func held_for(customer: Customer) -> Order:
+	for o in held_orders:
+		if o.customer == customer:
+			return o
+	return null
+
+
+func add_held(order: Order) -> void:
+	if not can_carry_more():
+		return
 	Sfx.play(&"PickUp")
-	held_order = order
-	held_visual = Food.spawn(order.dish_id)
-	held_point.add_child(held_visual)
+	held_orders.append(order)
+	_rebuild_held()
+
+
+func remove_held(order: Order) -> void:
+	held_orders.erase(order)
+	_rebuild_held()
 
 
 func clear_held() -> void:
-	held_order = null
-	if held_visual and is_instance_valid(held_visual):
-		held_visual.queue_free()
-	held_visual = null
+	held_orders.clear()
+	_rebuild_held()
+
+
+## One plate: held in your hand. Two or more: plates side by side on a serving tray.
+func _rebuild_held() -> void:
+	if _held_root != null and is_instance_valid(_held_root):
+		_held_root.queue_free()
+	_held_root = null
+	if held_orders.is_empty():
+		return
+	_held_root = Node3D.new()
+	held_point.add_child(_held_root)
+	if carry_capacity() == 1:
+		_held_root.scale = Vector3.ONE * 0.75
+		_held_root.add_child(Food.spawn_served(held_orders[0].dish_id))
+		return
+	# A tray as wide as the plates it can hold, held a little lower and to the middle.
+	var n := carry_capacity()
+	var cols := 2 if n > 2 else n
+	var rows := int(ceil(float(n) / float(cols)))
+	var spacing := 0.46
+	_held_root.position = Vector3(-0.3, -0.12, -0.05)
+	_held_root.scale = Vector3.ONE * 0.5
+	var tray := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(cols * spacing + 0.06, 0.025, rows * spacing + 0.06)
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.55, 0.36, 0.2)
+	box.material = mat
+	tray.mesh = box
+	tray.position.y = -0.0125
+	_held_root.add_child(tray)
+	for i in held_orders.size():
+		var served := Food.spawn_served(held_orders[i].dish_id)
+		var c := i % cols
+		var r := i / cols
+		served.position = Vector3((c - (cols - 1) / 2.0) * spacing, 0.0, (r - (rows - 1) / 2.0) * spacing)
+		_held_root.add_child(served)
 
 
 func _check_held() -> void:
-	if held_order and not held_order.is_active():
-		notice.emit("That customer left! The plate was thrown out.")
-		clear_held()
+	var gone := held_orders.filter(func(o: Order) -> bool: return not o.is_active())
+	if gone.is_empty():
+		return
+	for o in gone:
+		held_orders.erase(o)
+	notice.emit("That customer left! The plate was thrown out.")
+	_rebuild_held()

@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://sgr4m6dmgheo"
+path="res://.godot/imported/road-roundabout.obj-2ab6f21d5c0ade7f0d7ef88fa3f86d9d.mesh"
+
+[deps]
+
+files=["res://.godot/imported/road-roundabout.obj-2ab6f21d5c0ade7f0d7ef88fa3f86d9d.mesh"]
+
+source_file="res://assets/city-kit-roads/road-roundabout.obj"
+dest_files=["res://.godot/imported/road-roundabout.obj-2ab6f21d5c0ade7f0d7ef88fa3f86d9d.mesh", "res://.godot/imported/road-roundabout.obj-2ab6f21d5c0ade7f0d7ef88fa3f86d9d.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

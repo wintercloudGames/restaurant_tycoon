@@ -25,6 +25,8 @@ const SIT_NAMES: Array[String] = ["sit", "idle"]
 var state: State = State.WALK_TO_TABLE
 var table: Table
 var exit_pos: Vector3
+var path_in: Array = [] # points walked through before heading to the table (the front door)
+var path_out: Array = [] # points walked through on the way out, before exit_pos
 var dish_id: String = ""
 var patience: float = 1.0
 var timer: float = 0.0
@@ -72,7 +74,6 @@ func setup(p_table: Table, p_seat: int, start: Vector3, p_exit: Vector3, delay: 
 
 func _ready() -> void:
 	add_to_group("customers")
-	Sfx.play(&"CustomerArrive")
 	_build_bubble()
 	_anim = CharAnim.new(model)
 	_anim.play(WALK_NAMES)
@@ -242,7 +243,12 @@ func _process(delta: float) -> void:
 				start_delay -= delta
 				if start_delay <= 0.0:
 					visible = true
-					Sfx.play(&"CustomerArrive")
+				return
+			if not path_in.is_empty():
+				if _move_to(path_in[0], delta):
+					path_in.pop_front()
+					if path_in.size() == 1:
+						Sfx.play(&"CustomerArrive") # the door chime as they step in
 				return
 			if _move_to(table.get_seat(seat_index), delta):
 				_face(table.global_position)
@@ -255,6 +261,7 @@ func _process(delta: float) -> void:
 				_food_sprite.texture = FoodIcons.texture_for(dish_id)
 				state = State.WAIT_ORDER
 				_say("%s, please!" % _dish_name())
+				Sfx.play(&"CustomerTalk")
 		State.WAIT_ORDER:
 			_lose_patience(delta)
 		State.WAIT_FOOD:
@@ -264,7 +271,10 @@ func _process(delta: float) -> void:
 			if timer <= 0.0:
 				_pay_and_leave()
 		State.LEAVING:
-			if _move_to(exit_pos, delta):
+			if not path_out.is_empty():
+				if _move_to(path_out[0], delta):
+					path_out.pop_front()
+			elif _move_to(exit_pos, delta):
 				queue_free()
 
 
@@ -275,12 +285,11 @@ func get_prompt(player: Player) -> String:
 		State.WAIT_ORDER:
 			return "[E] Take order (%s)" % where()
 		State.WAIT_FOOD:
-			var held := player.held_order
-			if held == null:
-				return "Waiting for %s" % _dish_name()
-			if held.customer == self:
+			if player.held_for(self) != null:
 				return "[E] Serve %s" % _dish_name()
-			return "Wrong plate - this is %s" % where()
+			if player.held_orders.is_empty():
+				return "Waiting for %s" % _dish_name()
+			return "No plate for %s on your tray" % where() if player.held_orders.size() > 1 else "Wrong plate - this is %s" % where()
 	return ""
 
 
@@ -289,9 +298,9 @@ func interact(player: Player) -> void:
 		State.WAIT_ORDER:
 			take_order()
 		State.WAIT_FOOD:
-			if player.held_order != null and player.held_order.customer == self:
-				var plate_order := player.held_order
-				player.clear_held()
+			var plate_order := player.held_for(self)
+			if plate_order != null:
+				player.remove_held(plate_order)
 				serve(plate_order)
 
 
@@ -318,16 +327,19 @@ func serve(order: Order) -> void:
 func _start_eating() -> void:
 	state = State.EATING
 	Sfx.play(&"Eat")
+	Sfx.play(&"Yum")
 	timer = eat_seconds
 	_say("Yum!")
-	food = Food.spawn(dish_id)
+	food = Food.spawn_served(dish_id)
 	table.add_food(food, seat_index)
 
 
 func _lose_patience(delta: float) -> void:
 	# Dishes with more steps take longer, so those customers are more patient.
 	var step_factor := 0.8 + 0.2 * float(GameState.dish_steps(dish_id).size())
-	patience -= delta / (patience_seconds * GameState.patience_multiplier() * step_factor)
+	# Comfy red chairs make customers wait longer.
+	var chair_factor := GameState.COMFY_CHAIR_PATIENCE if table.is_comfy(seat_index) else 1.0
+	patience -= delta / (patience_seconds * GameState.patience_multiplier() * step_factor * chair_factor)
 	if patience <= 0.0:
 		_say("Angry!")
 		Sfx.play(&"Angry")
@@ -341,6 +353,7 @@ func _pay_and_leave() -> void:
 	GameState.earn(base + tip)
 	GameState.add_xp(GameState.xp_for_plate(price, quality))
 	Sfx.play(&"Pay")
+	Sfx.play(&"CustomerHappy")
 	_leave()
 
 

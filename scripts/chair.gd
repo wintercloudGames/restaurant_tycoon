@@ -6,11 +6,14 @@ extends Node3D
 
 var table: Table
 var slot: int = -1 # which chair spot of the table this is
+var comfy: bool = false # the comfy red chair: customers on it wait longer
+var _tint: Color = Color.WHITE
 var model: ModelSlot
 var _pick_body: StaticBody3D
 
 
-func setup(path: String, scene: PackedScene, fit: Vector3, color: Color) -> void:
+func setup(path: String, scene: PackedScene, fit: Vector3, color: Color, tint: Color = Color.WHITE) -> void:
+	_tint = tint
 	model = ModelSlot.new()
 	model.model_path = path
 	model.model_scene = scene
@@ -29,6 +32,25 @@ func setup(path: String, scene: PackedScene, fit: Vector3, color: Color) -> void
 	shape.position = Vector3(0, fit.y / 2.0, 0)
 	_pick_body.add_child(shape)
 	add_child(_pick_body)
+
+
+func _ready() -> void:
+	if _tint != Color.WHITE and model != null and model.instance != null:
+		_apply_tint(model.instance)
+
+
+## Multiplies the model's colors by the tint (the red of the comfy chair).
+func _apply_tint(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		for i in mi.mesh.get_surface_count():
+			var mat := mi.get_active_material(i) as BaseMaterial3D
+			if mat != null:
+				mat = mat.duplicate() as BaseMaterial3D
+				mat.albedo_color *= _tint
+				mi.set_surface_override_material(i, mat)
+	for child in node.get_children():
+		_apply_tint(child)
 
 
 func set_pickable(on: bool) -> void:

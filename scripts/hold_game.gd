@@ -1,7 +1,8 @@
 class_name HoldGame
 extends CookMinigame
-## Frying minigame (minigame_hold.tscn): hold Space / E / Left Click to heat the oil, release
-## to let it cool. Keep the marker inside the green zone (which drifts) until time runs out.
+## Fry / pour minigame (minigame_hold.tscn): hold Space / E / click / controller A to heat,
+## release to cool. Keep the marker inside the drifting green zone until time runs out. The
+## stage line shows how much of the time you've kept it in the zone so far.
 
 @export var duration: float = 7.0
 
@@ -16,6 +17,7 @@ var _rise: float = 0.9
 var _fall: float = 0.6
 var _bar_w: float = 560.0
 var _bar_h: float = 36.0
+var _was_inside: bool = false
 
 @onready var _bar: Control = %Bar
 @onready var _zone_rect: ColorRect = %Zone
@@ -31,8 +33,19 @@ func _setup() -> void:
 	_drift_phase = randf() * TAU
 	_bar_w = _bar.custom_minimum_size.x
 	_bar_h = _zone_rect.size.y if _zone_rect.size.y > 0.0 else 36.0
-	_stage_label.text = "Hold to heat, release to cool - stay in the green!"
+	_zone_rect.color = Color(0.25, 0.7, 0.35)
+	_marker_rect.move_to_front()
+	set_prompt(["cook_press"], "Hold to heat, let go to cool - stay in the green")
 	_update_visuals()
+
+
+func _poll() -> void:
+	var holding := Input.is_action_pressed("cook_press")
+	if holding and not _holding:
+		Sfx.play(&"MinigamePress")
+		if _prompt_icons.get_child_count() > 0:
+			pulse(_prompt_icons.get_child(0) as Control)
+	_holding = holding
 
 
 func _tick(delta: float) -> void:
@@ -48,7 +61,13 @@ func _tick(delta: float) -> void:
 	var inside := absf(_heat - _zone_c) <= _zone_w / 2.0
 	if inside:
 		_in_zone += delta
-	_marker_rect.color = Color(0.4, 1.0, 0.5) if inside else Color.WHITE
+	if inside != _was_inside and _elapsed > 0.3:
+		if inside:
+			show_feedback("In the zone!", GOOD_COLOR)
+		else:
+			show_feedback("Too hot!" if _heat > _zone_c else "Too cold!", MISS_COLOR)
+	_was_inside = inside
+	_marker_rect.color = GOOD_COLOR if inside else Color.WHITE
 	_update_visuals()
 	if _elapsed >= duration:
 		# 80% of the time in the zone counts as a perfect dish.
@@ -60,16 +79,5 @@ func _update_visuals() -> void:
 	_zone_rect.size = Vector2(_zone_w * _bar_w, _bar_h)
 	_marker_rect.position.x = _heat * _bar_w - _marker_rect.size.x / 2.0
 	_time_bar.value = (1.0 - _elapsed / duration) * 100.0
-
-
-func _game_input(event: InputEvent) -> void:
-	if event is InputEventKey and not event.echo and (event.keycode == KEY_SPACE or event.keycode == KEY_E):
-		if event.pressed and not _holding:
-			Sfx.play(&"MinigamePress")
-		_holding = event.pressed
-		get_viewport().set_input_as_handled()
-	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed and not _holding:
-			Sfx.play(&"MinigamePress")
-		_holding = event.pressed
-		get_viewport().set_input_as_handled()
+	var share := 0.0 if _elapsed <= 0.0 else _in_zone / _elapsed
+	_stage_label.text = "In the zone: %d%%   (80%% or more is Perfect)" % int(round(share * 100.0))

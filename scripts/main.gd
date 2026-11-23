@@ -17,6 +17,8 @@ var rank_label: Label
 var rank_bar: ProgressBar
 var rank_detail: Label
 var pause_menu: PauseMenu
+var outside: Outside
+var _ambience_db: float = -60.0
 var _loaded: bool = false # the save is loaded (on the web we wait for the CrazyGames SDK first)
 
 @onready var kitchen: Kitchen = $Kitchen
@@ -36,6 +38,10 @@ func _ready() -> void:
 	player.notice.connect(hud.show_toast)
 	_setup_plots()
 	_setup_build_mode()
+	Sfx.fill_defaults() # every sound scene is loaded now: give empty sound nodes their default sound
+	Sfx.play(&"Ambience")
+	if not Sfx.is_playing(&"Music"):
+		Sfx.play(&"Music") # its stream was only set just now, after autoplay had its turn
 	_setup_shop()
 	_setup_rank_ui()
 	GameState.changed.connect(_refresh)
@@ -46,6 +52,7 @@ func _ready() -> void:
 	await CrazyGames.wait_ready()
 	var earned := GameState.load_game()
 	plots.set_expansions(GameState.expansions)
+	_update_front()
 	_sync_table_pool()
 	build_mode.restore_layout()
 	_refresh()
@@ -95,6 +102,18 @@ func _setup_plots() -> void:
 	plots.adopt_scene_walls({
 		"west": get_node_or_null("WallLeft"), "east": get_node_or_null("WallRight"),
 		"north": get_node_or_null("WallBack"), "south": get_node_or_null("WallFront")})
+	outside = Outside.new()
+	outside.name = "Outside"
+	add_child(outside)
+	_update_front()
+
+
+## The front door is in the south wall of the front-most middle plot: put the Door marker
+## just inside it and rebuild the street along the (new) front.
+func _update_front() -> void:
+	var d := plots.door_position()
+	door.position = Vector3(d.x, 0.0, d.z - 1.6)
+	outside.rebuild(plots.bounds(), d)
 
 
 ## Each expansion makes room for 2 more tables. Tables beyond the 8 in main.tscn are made here.
@@ -111,6 +130,7 @@ func _sync_table_pool() -> void:
 
 func _on_expanded(count: int) -> void:
 	plots.set_expansions(count)
+	_update_front()
 	_sync_table_pool()
 	hud.show_toast("Your restaurant grew! %s added: a whole new floor to build on." % GameState.EXPANSION_NAMES[count - 1])
 	Sfx.play(&"Expand")
@@ -198,34 +218,44 @@ func _setup_build_mode() -> void:
 	build_mode.name = "BuildMode"
 	add_child(build_mode)
 	build_mode.setup(player, tables, door, kitchen, plots)
-	# Mention the build key in the on-screen controls hint.
-	var hint := hud.get_node_or_null("Root/HintLabel") as Label
-	if hint != null and not hint.text.contains("V build"):
-		hint.text += "  |  V build"
+	# The on-screen controls hint is set by hud.gd (it follows keyboard / controller).
 
 
 func _process(delta: float) -> void:
 	if not _loaded:
 		return
+	# The restaurant murmur gets louder the more customers there are.
+	var crowd := get_tree().get_nodes_in_group("customers").size()
+	var target_db := -60.0 if crowd == 0 else lerpf(-26.0, -13.0, clampf(float(crowd - 1) / 10.0, 0.0, 1.0))
+	_ambience_db = move_toward(_ambience_db, target_db, 12.0 * delta)
+	Sfx.set_volume(&"Ambience", _ambience_db)
 	spawn_timer += delta
 	if spawn_timer >= spawn_interval * GameState.spawn_interval_multiplier():
 		spawn_timer = 0.0
 		_try_spawn()
 
-	hud.prompt_label.text = "" if (build_mode.active or not player.enabled) else player.prompt
-	if player.held_order:
-		hud.held_label.text = "Carrying: %s for %s" % [
-			player.held_order.dish_name(), player.held_order.where()]
-	else:
+	hud.set_prompt("" if (build_mode.active or not player.enabled) else player.prompt)
+	if player.held_orders.is_empty():
 		hud.held_label.text = ""
+	else:
+		var parts: Array[String] = []
+		for o in player.held_orders:
+			parts.append("%s for %s" % [o.dish_name(), o.where()])
+		var count := "" if player.carry_capacity() == 1 else " (%d/%d)" % [player.held_orders.size(), player.carry_capacity()]
+		hud.held_label.text = "Carrying%s: %s" % [count, ",  ".join(parts)]
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not _loaded or player.busy or build_mode.active:
 		return
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_B or event.keycode == KEY_ESCAPE:
-			_set_shop(not shop_open)
+	if event.is_echo():
+		return
+	# B / the controller's Y toggles the shop. Esc also toggles it (keyboard); the
+	# controller's B button only closes it.
+	var esc_key := event is InputEventKey and event.is_action_pressed("cancel")
+	if event.is_action_pressed("shop") or esc_key or (shop_open and event.is_action_pressed("cancel")):
+		_set_shop(not shop_open)
+		get_viewport().set_input_as_handled()
 
 
 func _set_shop(open: bool) -> void:
@@ -253,7 +283,16 @@ func _try_spawn() -> void:
 	var chairs := table.begin_party(size)
 	for k in chairs.size():
 		var c := customer_scene.instantiate() as Customer
-		c.setup(table, chairs[k], door.position, door.position, 0.6 * k)
+		# Walk in from along the sidewalk, through the front door, to the table; leave the same way.
+		var d := plots.door_position()
+		var side := -1.0 if randf() < 0.5 else 1.0
+		var street := Vector3(d.x + side * randf_range(14.0, 22.0), 0.0, d.z + 2.5 + 0.7 * k)
+		var outside_door := Vector3(d.x, 0.0, d.z + 1.2)
+		var inside_door := Vector3(d.x, 0.0, d.z - 1.2)
+		var away := Vector3(d.x - side * randf_range(16.0, 24.0), 0.0, d.z + 2.8)
+		c.setup(table, chairs[k], street, away, 0.6 * k)
+		c.path_in = [outside_door, inside_door]
+		c.path_out = [inside_door, outside_door]
 		c.order_taken.connect(kitchen.on_order_taken)
 		add_child(c)
 

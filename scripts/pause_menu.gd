@@ -11,10 +11,12 @@ extends CanvasLayer
 
 const SETTINGS_PATH := "user://settings.cfg"
 const THEME_PATH := "res://assets/restraunt_theme.tres"
+const MUSIC_BASE_DB := -10.0 # the Music slider at full = this loud
 
 var main: Node
 var player: Player
 var is_open: bool = false
+var _start_screen: bool = false # the first screen of the session (PLAY plays the start chime)
 
 var _dim: ColorRect
 var _title: Label
@@ -50,6 +52,9 @@ func _ready() -> void:
 	_build()
 	_load_settings()
 	CrazyGames.ad_finished.connect(_on_ad_finished)
+	Controls.device_changed.connect(func(_c: bool) -> void:
+		if is_open and get_viewport().gui_get_focus_owner() == null:
+			_play_button.grab_focus())
 	GameState.changed.connect(_refresh_buttons)
 
 
@@ -57,6 +62,9 @@ func _ready() -> void:
 
 ## Shows the menu. `start` = the first screen of the session (welcome text + "Play").
 func open(start: bool = false) -> void:
+	if not start and not is_open:
+		Sfx.play(&"ShopOpen")
+	_start_screen = start
 	is_open = true
 	_dim.visible = true
 	get_tree().paused = true
@@ -89,7 +97,8 @@ func resume() -> void:
 	_since_resume = 0.0
 	CrazyGames.set_gameplay(true)
 	_save_settings()
-	Sfx.play(&"ShopClose")
+	Sfx.play(&"GameStart" if _start_screen else &"ShopClose")
+	_start_screen = false
 
 
 func _process(delta: float) -> void:
@@ -99,7 +108,9 @@ func _process(delta: float) -> void:
 	if is_open or CrazyGames.ad_playing or main == null or _grace > 0.0 or _test_mode:
 		return
 	# The mouse got released while we should be playing (Esc on the web, alt-tab...): pause.
-	if not bool(main.get("shop_open")) and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+	# Not when playing with a controller: it doesn't need the mouse locked.
+	if not bool(main.get("shop_open")) and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED \
+			and not Controls.using_controller:
 		var lock_failed := _since_resume < 2.0
 		open(false)
 		if lock_failed:
@@ -113,14 +124,13 @@ func _notification(what: int) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_P:
+	if event.is_action_pressed("pause") and not event.is_echo(): # P or the controller's Menu / Start
 		if is_open:
 			resume()
 		elif main != null and not bool(main.get("shop_open")):
 			open(false)
 		get_viewport().set_input_as_handled()
-	elif is_open and event is InputEventKey and event.pressed and not event.echo \
-			and event.keycode == KEY_ESCAPE:
+	elif is_open and event.is_action_pressed("cancel") and not event.is_echo(): # Esc or B
 		resume()
 		get_viewport().set_input_as_handled()
 
@@ -185,7 +195,7 @@ func _apply_settings() -> void:
 	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(_volume.value, 0.0001)))
 	var music := _find_music()
 	if music != null:
-		music.volume_db = linear_to_db(maxf(_music.value, 0.0001))
+		music.volume_db = MUSIC_BASE_DB + linear_to_db(maxf(_music.value, 0.0001))
 	if player != null:
 		player.sensitivity = _base_sensitivity * _sensitivity.value
 
@@ -277,7 +287,8 @@ func _build() -> void:
 	box.add_child(HSeparator.new())
 
 	var controls := _label(box,
-		"WASD move  ·  Mouse / arrow keys look  ·  E / Click interact\nB shop  ·  V build  ·  P pause", 16)
+		"WASD move  ·  Mouse / arrow keys look  ·  E / Click interact\nB shop  ·  V build  ·  P pause\n"
+		+ "Controller: sticks move / look  ·  A interact  ·  Y shop  ·  View build  ·  Menu pause", 16)
 	controls.modulate = Color(1, 1, 1, 0.8)
 
 

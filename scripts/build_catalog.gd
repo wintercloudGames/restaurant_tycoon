@@ -22,6 +22,10 @@ const ITEMS: Array[Dictionary] = [
 	{"id": "table6", "rank": 6, "name": "Table for 6", "kind": "table", "seats": 6},
 	{"id": "chair", "rank": 1, "name": "Chair", "kind": "chair", "cost": 25,
 		"models": ["res://assets/furniture-kit/chair.glb"], "fit": Vector3(0.6, 1.0, 0.6), "color": Color(0.7, 0.5, 0.3)},
+	# Costs more, but customers sitting on it wait longer (GameState.COMFY_CHAIR_PATIENCE).
+	{"id": "chair_comfy", "rank": 1, "name": "Comfy Red Chair", "kind": "chair", "cost": 75, "comfy": true,
+		"models": ["res://assets/furniture-kit/chairCushion.glb", "res://assets/furniture-kit/chair.glb"],
+		"fit": Vector3(0.6, 1.0, 0.6), "color": Color(0.85, 0.15, 0.15), "tint": Color(1.0, 0.3, 0.3)},
 	{"id": "stove", "rank": 3, "name": "Stove (4 burners)", "kind": "station", "cost": 250, "appeal": 0, "blocks": true,
 		"scene": "res://scenes/stove.tscn", "models": ["res://assets/furniture-kit/kitchenStove.glb"],
 		"fit": Vector3(1.0, 1.0, 1.0), "color": Color(0.4, 0.4, 0.45)},
@@ -77,6 +81,11 @@ static func table_def(seats: int) -> Dictionary:
 		if d.get("kind", "") == "table" and int(d["seats"]) == seats:
 			return d
 	return find("table2")
+
+
+## The catalog entry for a chair: the comfy red one or the plain one.
+static func chair_def(comfy: bool) -> Dictionary:
+	return find("chair_comfy" if comfy else "chair")
 
 
 static func rank_of(def: Dictionary) -> int:

@@ -21,6 +21,31 @@ static func spawn_step(order: Order) -> Node3D:
 	return food
 
 
+const PLATE_MODEL := "res://assets/food-kit/plate.glb"
+const PLATE_SIZE := Vector3(0.42, 0.04, 0.42)
+
+
+## A plate model (used under every finished dish).
+static func make_plate() -> ModelSlot:
+	var plate := ModelSlot.new()
+	plate.name = "PlateModel"
+	plate.model_path = PLATE_MODEL
+	plate.fit_size = PLATE_SIZE
+	plate.fallback_color = Color(0.95, 0.95, 0.95)
+	plate.fallback_cylinder = true
+	return plate
+
+
+## A finished dish served on a plate: on the order-up table, carried, and on the customer's table.
+static func spawn_served(dish_id: String) -> Node3D:
+	var root := Node3D.new()
+	root.add_child(make_plate())
+	var food := spawn(dish_id)
+	food.position.y = 0.025
+	root.add_child(food)
+	return root
+
+
 static func spawn(dish_id: String) -> Node3D:
 	var scene := load("res://scenes/food.tscn") as PackedScene
 	var food := scene.instantiate() as ModelSlot

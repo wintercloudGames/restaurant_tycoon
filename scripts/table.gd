@@ -126,10 +126,16 @@ func set_active(active: bool) -> void:
 
 # ---- Chairs ----------------------------------------------------------------
 
-## A new chair using the table's chair model (not attached to a spot yet).
-func make_chair() -> Chair:
+## A new chair (not attached to a spot yet): the table's chair model, or the comfy red chair
+## from the build catalog.
+func make_chair(comfy: bool = false) -> Chair:
 	var chair := Chair.new()
-	chair.setup(_chair_path, _chair_scene, _chair_fit, _chair_color)
+	if comfy:
+		var def := BuildCatalog.chair_def(true)
+		chair.setup(BuildCatalog.model_path_for(def), null, def["fit"], def["color"], def.get("tint", Color.WHITE))
+	else:
+		chair.setup(_chair_path, _chair_scene, _chair_fit, _chair_color)
+	chair.comfy = comfy
 	return chair
 
 
@@ -157,6 +163,20 @@ func filled_slots() -> Array[int]:
 	return list
 
 
+## The chair spots that have a comfy red chair.
+func comfy_slots() -> Array[int]:
+	var list: Array[int] = []
+	for i in _chairs.size():
+		if _chairs[i] != null and _chairs[i].comfy:
+			list.append(i)
+	return list
+
+
+func is_comfy(slot: int) -> bool:
+	var chair := chair_at(slot)
+	return chair != null and chair.comfy
+
+
 func free_slots() -> Array[int]:
 	var list: Array[int] = []
 	for i in _chairs.size():
@@ -176,10 +196,10 @@ func slot_position(i: int) -> Vector3:
 
 ## Puts a chair in spot `slot`. Returns it, or null if the spot is taken or doesn't exist
 ## (a table can't hold more chairs than it seats).
-func add_chair(slot: int) -> Chair:
+func add_chair(slot: int, comfy: bool = false) -> Chair:
 	if slot < 0 or slot >= seats or _chairs[slot] != null:
 		return null
-	var chair := make_chair()
+	var chair := make_chair(comfy)
 	chair.table = self
 	chair.slot = slot
 	add_child(chair)
@@ -203,11 +223,15 @@ func clear_chairs() -> void:
 		remove_chair(i)
 
 
-## Gives the table a chair in each of the listed spots (and none elsewhere).
-func set_chairs(slots: Array) -> void:
+## Gives the table a chair in each of the listed spots (and none elsewhere); the spots in
+## `comfy` get the comfy red chair.
+func set_chairs(slots: Array, comfy: Array = []) -> void:
 	clear_chairs()
+	var comfy_ints: Array[int] = []
+	for c in comfy:
+		comfy_ints.append(int(c))
 	for s in slots:
-		add_chair(int(s))
+		add_chair(int(s), comfy_ints.has(int(s)))
 
 
 func fill_chairs() -> void:

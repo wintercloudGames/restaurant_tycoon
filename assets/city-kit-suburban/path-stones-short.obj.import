@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://4m8b181x4hey"
+path="res://.godot/imported/path-stones-short.obj-4ca2de1a1ef5f6d12cc2032d695d1336.mesh"
+
+[deps]
+
+files=["res://.godot/imported/path-stones-short.obj-4ca2de1a1ef5f6d12cc2032d695d1336.mesh"]
+
+source_file="res://assets/city-kit-suburban/path-stones-short.obj"
+dest_files=["res://.godot/imported/path-stones-short.obj-4ca2de1a1ef5f6d12cc2032d695d1336.mesh", "res://.godot/imported/path-stones-short.obj-4ca2de1a1ef5f6d12cc2032d695d1336.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

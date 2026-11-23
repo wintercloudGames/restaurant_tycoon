@@ -204,7 +204,7 @@ func place_on_burner(ticket: Ticket, player: Player) -> void:
 	tickets[ticket.slot] = null
 	ticket.queue_free()
 	burner.place(order, false)
-	player.notice.emit("On the %s! Press E there to %s it." % [("stove" if burner.station == "stove" else "counter"), order.step_label().to_lower()])
+	player.notice.emit("On the %s! Press %s there to %s it." % [("stove" if burner.station == "stove" else "counter"), "A" if Controls.using_controller else "E", order.step_label().to_lower()])
 
 
 func _game_scene(game_type: String) -> PackedScene:
@@ -215,6 +215,8 @@ func _game_scene(game_type: String) -> PackedScene:
 			return mash_game_scene
 		"sequence":
 			return sequence_game_scene
+		"chop":
+			return load("res://scenes/minigame_chop.tscn") as PackedScene
 	return minigame_scene
 
 
@@ -238,12 +240,25 @@ func _on_player_finished(quality: float, order: Order, burner: Burner, player: P
 	burner.clear()
 	player.busy = false
 	player.enabled = true
-	var was_last := not order.has_more_steps()
-	finish_step(order, quality)
-	if was_last:
+	if not order.has_more_steps():
+		finish_step(order, quality)
 		player.notice.emit("%s dish sent to the order-up table!" % CookMinigame.quality_name(order.quality))
+		return
+	# More steps: put the next one straight onto a free stove / counter spot, ready for you to
+	# press E there (no need to click its ticket). Only if every spot is busy does it go back
+	# on the ticket board.
+	order.record_step(quality)
+	order.advance()
+	var next := _free_burner(order.step_station())
+	var where := "stove" if order.step_station() == "stove" else "counter"
+	if next != null:
+		next.place(order, false)
+		player.notice.emit("%s! Next: %s - it's on the %s, press %s there." % [
+			CookMinigame.quality_name(quality), order.step_label(), where, "A" if Controls.using_controller else "E"])
 	else:
-		player.notice.emit("%s! Next: %s (back on the ticket board)." % [CookMinigame.quality_name(quality), order.step_label()])
+		add_order(order)
+		player.notice.emit("%s! Next: %s - no free %s spot, so it's back on the ticket board." % [
+			CookMinigame.quality_name(quality), order.step_label(), where])
 
 
 ## A step of a recipe is done (by you or a cook). More steps left: the order goes back on the

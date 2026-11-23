@@ -112,7 +112,7 @@ func _drop_order() -> void:
 
 
 func _hold(order: Order) -> void:
-	_held = Food.spawn(order.dish_id)
+	_held = Food.spawn_served(order.dish_id)
 	held_point.add_child(_held)
 
 

@@ -5,13 +5,20 @@
 2. Press F5. It runs immediately with colored-box placeholders.
 
 ## How it plays (first person)
-Controls: WASD move, mouse look, E or left click interact, B (or Esc) opens the shop, V build mode, P pause / settings.
+Controls: WASD move, mouse (or arrow keys) look, E or left click interact, B (or Esc) opens the shop, V build mode, P pause / settings.
+
+**Controller** (Xbox names; PlayStation works too): left stick move, right stick look, A interact / cook, B back / cancel,
+Y shop, View build mode, Menu pause. In the shop: D-pad / stick to pick a card, A buy, LB / RB switch tabs, B close.
+In build mode: A place / pick up, X sell / cancel, Y rotate, LB / RB previous / next item, B leave.
+On-screen prompts show the button icons for whatever you used last (keyboard or controller). All bindings are in
+`autoload/controls.gd` (`BINDINGS`); the icons come from `assets/input/`.
 
 1. A customer walks in and sits. A chat bubble above them shows what they want.
 2. Look at them and press E to take the order (or hire a waiter to do it). A paper ticket appears on the board on the back wall.
 3. Click a ticket. The food goes onto a free **stove burner** or **counter prep spot** (depending on the dish), sitting in a pan, pot, board or plate.
 4. Walk to that spot and press E. The minigame for that dish pops up (see below). Esc cancels; the food stays put so you can try again.
-5. The finished dish goes on the ORDER UP table. Press E on a plate to carry it yourself, or let a waiter deliver it.
+5. The finished dish goes on the ORDER UP table, on a plate. Press E on a plate to carry it yourself, or let a waiter deliver it.
+   With the **Serving Tray** upgrade you can carry several plates at once on a tray; each customer takes their own plate off it.
 6. Serve the right customer with E. They eat, pay (more for a better dish, plus a tip for being quick) and leave.
 
 The starter kitchen has a stove (4 burners) and a prep counter (2 spots). Buy more of either in build mode.
@@ -25,7 +32,7 @@ A window with a scrolling grid of cards. Each card has a 3D preview, what it doe
 | Tab | What's in it |
 |---|---|
 | Dishes | All 40 dishes. Shows the price per plate, the station (Stove / Counter) and the minigame. Unlock new ones. |
-| Upgrades | Easier cooking (bigger zones, slower markers, faster chefs, 10 levels), Marketing (customers arrive 10% faster per level, 5 levels), Comfy seating (customers wait 15% longer per level, 5 levels) |
+| Upgrades | Easier cooking (bigger zones, slower markers, faster chefs, 10 levels), Marketing (customers arrive 10% faster per level, 5 levels), Serving Tray (carry one more plate at a time per level: 2, 3, then 4 plates; ranks 2 / 5 / 8), Comfy seating (customers wait 15% longer per level, 5 levels) |
 | Staff | Hire cooks (up to 4) and waiters (up to 3) |
 | Build | Every table, station and decor item. Pressing a Build card closes the shop and starts build mode already holding that item. |
 | Restaurant | Your rank and XP, plus the expansions you can buy |
@@ -36,10 +43,14 @@ Quality (Perfect / Good / Burnt) changes what the customer pays.
 
 | Minigame | How it works |
 |---|---|
-| Grill (timing) | Stop the moving marker inside the green zone, once per round. Space / E / Click |
-| Fry / pour (hold) | Hold to raise the marker, release to lower it; keep it in the drifting green zone until time runs out |
-| Stir / scoop (mash) | Mash Space / E / Click to fill the meter before time runs out; finishing sooner is better |
-| Assemble (sequence) | Press the arrows shown, in order, with the arrow keys or W A S D (up / left / down / right); wrong directions cost quality |
+| Grill (timing) | Stop the moving marker inside the green zone, once per round; the bright middle is Perfect. Space / E / Click / A |
+| Fry / pour (hold) | Hold to raise the marker, release to lower it; keep it in the drifting green zone until time runs out (80% in the zone = Perfect) |
+| Stir / mix (mash) | Mash Space / E / Click / A to fill the meter before time runs out; filling it before the gold line is Perfect |
+| Chop (chop) | Tap left and right in turn (arrows, A / D, D-pad, stick); every switch is a cut, the same side twice slips |
+| Assemble (sequence) | Press the arrows shown, in order (arrows, W A S D, D-pad or stick); wrong directions cost quality |
+
+Every minigame shows the recipe's steps along the top (done / now / next), the buttons to press for your device,
+a pop-up for each hit (Perfect / Good / Miss) and the result at the end. Esc or B cancels (the food stays put).
 
 | Dish | Station | Minigame | Sells for | Unlock |
 |---|---|---|---|---|
@@ -119,8 +130,8 @@ Customers, cooks and waiters use **Random Paths** (a list of character models; o
 (size, fallback color) is in `scenes/food.tscn`.
 
 ## Sounds
-Open `scenes/game_sounds.tscn`. Every node there is an AudioStreamPlayer with no sound yet. Select a node and drag a
-.wav or .ogg file onto its **Stream** slot in the Inspector. Nodes with no stream stay silent.
+Open `scenes/game_sounds.tscn`. Every node there is an AudioStreamPlayer. Nodes left empty get the game's default sound
+(see "Sounds and music" below); to use your own, select a node and drag a .wav or .ogg onto its **Stream** slot.
 
 | Node | Plays when |
 |---|---|
@@ -193,8 +204,9 @@ Most dishes now take **several steps**, each with its own station, minigame and 
 *Build burger* (counter, assembly); a pizza is *Knead dough* (counter), *Add toppings* (counter) and *Bake pizza* (stove). Simple
 dishes (fried egg, soda, tea, ice cream, sub) stay one step.
 
-- After each step the order goes **back on the ticket board** as a new ticket ("Step 2/3"). Click it to put the next step on the right
-  station, walk there, press E. What's on the pan / board shows the ingredient for that step (a patty, bread, rice...).
+- When **you** finish a step, the next step goes **straight onto a free spot** of the right station (stove or counter), ready
+  for you to press E there - no need to click a ticket. Only if every spot of that station is busy does it go back on the
+  ticket board. Steps finished by hired cooks go back on the board for the next cook.
 - The dish's final quality is the **average of its steps**, so one bad step drags it down.
 - More steps pay more: **+20% per extra step**. Customers waiting for longer dishes are a bit more patient.
 - Hired cooks do the steps too, spreading the dish's cook time over them.
@@ -289,6 +301,27 @@ Download the packs from kenney.nl and copy the `.glb` files into:
 Then let Godot import them. Any path that doesn't exist falls back to a colored box.
 The filenames I used are guesses, so if a model shows up as a colored box, select its ModelSlot in the scene
 and point **Model Path** at the right file (see the section above). Dish models are in `autoload/game_state.gd`.
+
+## Outside the restaurant
+`scripts/outside.gd` builds everything outside in code, from the Kenney City Kit (Roads, Commercial, Suburban), Car Kit and
+Nature Kit (`assets/city-kit-*`, `assets/car-kit`, `assets/nature-kit`, all CC0, .obj files):
+a sidewalk and two-lane street along the front with a crosswalk at the door, shops across the street spaced out with trees,
+parked cars and little gardens between them, a few houses further back, street lamps and trees, cars driving by, a striped canopy, sign, planters and benches at the door, and trees, bushes
+and flowers on the other sides. It rebuilds after every expansion so the street stays along the front. Invisible walls keep
+you on the restaurant's side of the street.
+
+The outer walls have windows, and the front wall has a real doorway (`scripts/restaurant_plots.gd`: the front-most middle
+plot's south wall). Customers walk in from along the sidewalk, through the door, to their table, and leave the same way.
+
+## Sounds and music
+Every sound has a default now (`scripts/sound_bank.gd`); a sound node you give a Stream in the editor keeps yours.
+- Music (a relaxed cafe loop), the restaurant murmur (louder the more customers there are), customer voices (cute gibberish
+  when they ask for food, say OK, eat, pay or get angry), a door chime, sizzling while anything cooks, chopping, stirring,
+  pan clanks, the order-up bell, plates, munching and a cash register: all in `assets/sounds/`.
+- The start chime (PLAY), menu open / close, the shop's buy sound and tab clicks are custom too (`ui_*.ogg`).
+- Most of them are made by `tools/make_sounds.py` (run `python tools/make_sounds.py` to make them again; it needs numpy,
+  scipy and ffmpeg). The sizzle is `assets/sounds/sizzling 1.wav`. Clicks and menu blips are Kenney's interface sounds in
+  `assets/Audio/`.
 
 ## CrazyGames (web build)
 The game is set up to ship on CrazyGames as an HTML5 build.

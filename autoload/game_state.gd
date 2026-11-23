@@ -12,6 +12,8 @@ const MAX_OFFLINE_SECONDS := 8 * 3600
 const BASE_TABLES := 4
 const TABLES_PER_EXPANSION := 3
 const CHAIR_COST := 25
+## Customers on a comfy (red) chair wait this many times longer before leaving.
+const COMFY_CHAIR_PATIENCE := 1.5
 const MAX_RANK := 20
 const MAX_EXPANSIONS := 8
 ## What each expansion costs, the rank it needs, and what the new floor is called.
@@ -24,10 +26,14 @@ const MAX_WAITERS := 3
 const MAX_COOK_LEVEL := 10
 const MAX_MARKETING := 5
 const MAX_COMFORT := 5
+## Serving Tray upgrade: each level lets you carry one more plate (1 plate without it).
+const MAX_TRAY := 3
+const TRAY_COSTS: Array[int] = [250, 700, 1500]
+const TRAY_RANKS: Array[int] = [2, 5, 8]
 
 # Every dish: rank (the restaurant rank needed to unlock it), price, cook_time (seconds for a hired cook), unlock cost, model files (the first
 # one that exists is used), the cookware it sits in ("pan", "pot", "board" or "plate"),
-# difficulty (0..1), the minigame ("timing" grill, "hold" fry/pour, "mash" stir/scoop,
+# difficulty (0..1), the minigame ("timing" grill, "hold" fry/pour, "mash" stir/mix, "chop" chop/slice,
 # "sequence" assemble) and the station that makes it: "stove" (needs a free burner) or
 # "counter" (needs a free spot on a prep counter). Optional "rounds" = timing-game rounds.
 # "steps" is the list of steps to make the dish. Each step has a label, the station it needs
@@ -53,7 +59,7 @@ const DISHES := {
 		"models": ["res://assets/food-kit/sandwich.glb"],
 		"game": "sequence", "cookware": "board", "difficulty": 0.15, "station": "counter",
 		"steps": [
-			{"label": "Slice fillings", "station": "counter", "game": "mash", "cookware": "board", "models": ["res://assets/food-kit/cheese.glb"]},
+			{"label": "Slice fillings", "station": "counter", "game": "chop", "cookware": "board", "models": ["res://assets/food-kit/cheese.glb"]},
 			{"label": "Assemble", "station": "counter", "game": "sequence", "cookware": "board", "models": ["res://assets/food-kit/bread.glb"]},
 		]},
 	"soda": {"rank": 1, "name": "Soda", "price": 6, "cook_time": 2.0, "unlock": 60,
@@ -73,7 +79,7 @@ const DISHES := {
 		"models": ["res://assets/food-kit/salad.glb"],
 		"game": "sequence", "cookware": "board", "difficulty": 0.20, "station": "counter",
 		"steps": [
-			{"label": "Chop veg", "station": "counter", "game": "mash", "cookware": "board", "models": ["res://assets/food-kit/cabbage.glb"]},
+			{"label": "Chop veg", "station": "counter", "game": "chop", "cookware": "board", "models": ["res://assets/food-kit/cabbage.glb"]},
 			{"label": "Toss salad", "station": "counter", "game": "sequence", "cookware": "board", "models": ["res://assets/food-kit/tomato.glb"]},
 		]},
 	"tea": {"rank": 2, "name": "Tea", "price": 7, "cook_time": 3.0, "unlock": 110,
@@ -108,20 +114,20 @@ const DISHES := {
 		"game": "hold", "cookware": "plate", "difficulty": 0.20, "station": "counter",
 		"steps": [
 			{"label": "Fry dough", "station": "stove", "game": "hold", "cookware": "pot", "models": ["res://assets/food-kit/bread.glb"]},
-			{"label": "Glaze", "station": "counter", "game": "hold", "cookware": "plate", "models": ["res://assets/food-kit/chocolate.glb"]},
+			{"label": "Glaze", "station": "counter", "game": "sequence", "cookware": "plate", "models": ["res://assets/food-kit/chocolate.glb"]},
 		]},
 	"corndog": {"rank": 3, "name": "Corn Dog", "price": 13, "cook_time": 4.5, "unlock": 160,
 		"models": ["res://assets/food-kit/corn-dog.glb"],
 		"game": "hold", "cookware": "pot", "difficulty": 0.30, "station": "stove",
 		"steps": [
-			{"label": "Dip sausage", "station": "counter", "game": "hold", "cookware": "board", "models": ["res://assets/food-kit/meat-sausage.glb"]},
+			{"label": "Dip sausage", "station": "counter", "game": "timing", "cookware": "board", "models": ["res://assets/food-kit/meat-sausage.glb"]},
 			{"label": "Fry corn dog", "station": "stove", "game": "hold", "cookware": "pot"},
 		]},
 	"fries": {"rank": 3, "name": "Fries", "price": 14, "cook_time": 5.0, "unlock": 200,
 		"models": ["res://assets/food-kit/fries.glb"],
 		"game": "hold", "cookware": "pot", "difficulty": 0.30, "station": "stove",
 		"steps": [
-			{"label": "Cut potatoes", "station": "counter", "game": "mash", "cookware": "board", "models": ["res://assets/food-kit/carrot.glb"]},
+			{"label": "Cut potatoes", "station": "counter", "game": "chop", "cookware": "board", "models": ["res://assets/food-kit/carrot.glb"]},
 			{"label": "Fry", "station": "stove", "game": "hold", "cookware": "pot"},
 		]},
 	"cupcake": {"rank": 3, "name": "Cupcake", "price": 10, "cook_time": 3.0, "unlock": 200,
@@ -141,7 +147,7 @@ const DISHES := {
 		"models": ["res://assets/food-kit/bowl-broth.glb"],
 		"game": "mash", "cookware": "pot", "difficulty": 0.30, "station": "stove",
 		"steps": [
-			{"label": "Chop veg", "station": "counter", "game": "mash", "cookware": "board", "models": ["res://assets/food-kit/onion.glb"]},
+			{"label": "Chop veg", "station": "counter", "game": "chop", "cookware": "board", "models": ["res://assets/food-kit/onion.glb"]},
 			{"label": "Simmer broth", "station": "stove", "game": "mash", "cookware": "pot"},
 		]},
 	"sub": {"rank": 3, "name": "Sub", "price": 15, "cook_time": 4.0, "unlock": 280,
@@ -175,7 +181,7 @@ const DISHES := {
 		"models": ["res://assets/food-kit/bowl-soup.glb"],
 		"game": "mash", "cookware": "pot", "difficulty": 0.35, "station": "stove",
 		"steps": [
-			{"label": "Chop veg", "station": "counter", "game": "mash", "cookware": "board", "models": ["res://assets/food-kit/carrot.glb"]},
+			{"label": "Chop veg", "station": "counter", "game": "chop", "cookware": "board", "models": ["res://assets/food-kit/carrot.glb"]},
 			{"label": "Simmer soup", "station": "stove", "game": "mash", "cookware": "pot"},
 		]},
 	"doubleburger": {"rank": 4, "name": "Double Burger", "price": 18, "cook_time": 5.0, "unlock": 450,
@@ -279,7 +285,7 @@ const DISHES := {
 		"game": "sequence", "cookware": "board", "difficulty": 0.70, "station": "counter",
 		"steps": [
 			{"label": "Cook rice", "station": "stove", "game": "mash", "cookware": "pot", "models": ["res://assets/food-kit/rice-ball.glb"]},
-			{"label": "Slice fish", "station": "counter", "game": "mash", "cookware": "board", "models": ["res://assets/food-kit/fish.glb"]},
+			{"label": "Slice fish", "station": "counter", "game": "chop", "cookware": "board", "models": ["res://assets/food-kit/fish.glb"]},
 			{"label": "Roll maki", "station": "counter", "game": "sequence", "cookware": "board"},
 		]},
 	"pie": {"rank": 12, "name": "Pie", "price": 34, "cook_time": 8.0, "unlock": 2200,
@@ -301,7 +307,7 @@ const DISHES := {
 		"models": ["res://assets/food-kit/tajine.glb"],
 		"game": "mash", "cookware": "pot", "difficulty": 0.75, "station": "stove",
 		"steps": [
-			{"label": "Chop veg", "station": "counter", "game": "mash", "cookware": "board", "models": ["res://assets/food-kit/carrot.glb"]},
+			{"label": "Chop veg", "station": "counter", "game": "chop", "cookware": "board", "models": ["res://assets/food-kit/carrot.glb"]},
 			{"label": "Slow cook", "station": "stove", "game": "mash", "cookware": "pot"},
 			{"label": "Plate tajine", "station": "counter", "game": "sequence", "cookware": "plate"},
 		]},
@@ -310,7 +316,7 @@ const DISHES := {
 		"game": "sequence", "cookware": "board", "difficulty": 0.80, "station": "counter",
 		"steps": [
 			{"label": "Cook rice", "station": "stove", "game": "mash", "cookware": "pot", "models": ["res://assets/food-kit/rice-ball.glb"]},
-			{"label": "Slice fish", "station": "counter", "game": "mash", "cookware": "board", "models": ["res://assets/food-kit/fish.glb"]},
+			{"label": "Slice fish", "station": "counter", "game": "chop", "cookware": "board", "models": ["res://assets/food-kit/fish.glb"]},
 			{"label": "Roll sushi", "station": "counter", "game": "sequence", "cookware": "board"},
 		]},
 	"turkey": {"rank": 16, "name": "Roast Turkey", "price": 60, "cook_time": 11.0, "unlock": 4500,
@@ -324,13 +330,14 @@ const DISHES := {
 }
 
 var money: int = 0
-var table_count: int = 2
+var table_count: int = 1 # a new restaurant starts with one table (with one chair)
 var cook_level: int = 0
 var cook_count: int = 0
 var xp: int = 0 # experience; the restaurant's rank comes from it
 var expansions: int = 0 # extra floors added to the restaurant
 var marketing_level: int = 0 # customers arrive faster
 var comfort_level: int = 0 # customers wait longer
+var tray_level: int = 0 # Serving Tray upgrade: carry 1 + tray_level plates
 var waiter_count: int = 0
 var unlocked_dishes: Array = ["burger"]
 var placed: Array = [] # decor placed in build mode: [{id, x, z, rot}]
@@ -338,6 +345,8 @@ var table_layout: Dictionary = {} # table number (as text) -> {x, z, rot, seats,
 var table_owned: Dictionary = {} # table number (as text) -> true/false; empty = the first `table_count` tables
 ## Seconds left on the "2x cash" bonus (from a rewarded ad). Counts down only while the game runs.
 var boost_time_left: float = 0.0
+## True when there was no save to load: a brand-new restaurant (one table, one chair).
+var is_new_game: bool = false
 ## Offline earnings paid on the last load (the welcome screen can double them with an ad).
 var last_offline_earned: int = 0
 
@@ -457,6 +466,9 @@ func unlocks_at_rank(r: int) -> Array[String]:
 	for d in BuildCatalog.ITEMS:
 		if BuildCatalog.rank_of(d) == r:
 			list.append(str(d["name"]))
+	for i in TRAY_RANKS.size():
+		if TRAY_RANKS[i] == r:
+			list.append("Serving Tray Lv %d" % (i + 1))
 	for i in EXPANSION_RANKS.size():
 		if EXPANSION_RANKS[i] == r:
 			list.append("Expansion: %s" % EXPANSION_NAMES[i])
@@ -473,6 +485,28 @@ func cook_upgrade_rank() -> int:
 
 func marketing_rank() -> int:
 	return 2 + 2 * marketing_level
+
+func tray_rank() -> int:
+	return TRAY_RANKS[mini(tray_level, MAX_TRAY - 1)]
+
+
+func tray_cost() -> int:
+	return TRAY_COSTS[mini(tray_level, MAX_TRAY - 1)]
+
+
+## How many plates the player can carry at once.
+func carry_capacity() -> int:
+	return 1 + tray_level
+
+
+func buy_tray() -> bool:
+	if tray_level >= MAX_TRAY or rank() < tray_rank() or not spend(tray_cost()):
+		return false
+	tray_level += 1
+	changed.emit()
+	purchased.emit()
+	return true
+
 
 func comfort_rank() -> int:
 	return 3 + 2 * comfort_level
@@ -730,6 +764,7 @@ func save_game() -> void:
 		"cook_count": cook_count,
 		"marketing_level": marketing_level,
 		"comfort_level": comfort_level,
+		"tray_level": tray_level,
 		"waiter_count": waiter_count,
 		"unlocked_dishes": unlocked_dishes,
 		"xp": xp,
@@ -763,8 +798,10 @@ func _read_save_text() -> String:
 ## Loads the save and returns the offline earnings that were paid out.
 func load_game() -> int:
 	last_offline_earned = 0
+	is_new_game = false
 	var text := _read_save_text()
 	if text == "":
+		is_new_game = true
 		return 0
 	var data = JSON.parse_string(text)
 	if typeof(data) != TYPE_DICTIONARY:
@@ -775,6 +812,7 @@ func load_game() -> int:
 	cook_count = clampi(int(data.get("cook_count", 0)), 0, MAX_COOKS)
 	marketing_level = clampi(int(data.get("marketing_level", 0)), 0, MAX_MARKETING)
 	comfort_level = clampi(int(data.get("comfort_level", 0)), 0, MAX_COMFORT)
+	tray_level = clampi(int(data.get("tray_level", 0)), 0, MAX_TRAY)
 	# Old saves had a single "auto_serve" waiter flag.
 	var default_waiters := 1 if bool(data.get("auto_serve", false)) else 0
 	waiter_count = clampi(int(data.get("waiter_count", default_waiters)), 0, MAX_WAITERS)
